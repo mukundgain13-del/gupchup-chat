@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>गुपचुप चैट - मुख्य इनबॉक्स</title>
+    <!-- फायरबेस लाइब्रेरीज़ -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #111b21; color: #e9edef; display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* 1. हेडर स्टाइल */
+        .app-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #202c33; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .header-left { display: flex; align-items: center; }
+        .logo-circle { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #00a884; margin-right: 12px; }
+        .brand-title { font-size: 22px; font-weight: bold; color: #e9edef; }
+        .user-id-badge { background: #2a3942; color: #00a884; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #374248; cursor: pointer; }
+
+        /* मुख्य कंटेनर */
+        .main-container { flex: 1; padding: 20px; max-width: 600px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+
+        /* 2. सर्च बॉक्स */
+        .search-box { background: #222e35; padding: 18px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .box-title { font-size: 14px; color: #00a884; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .search-wrapper { display: flex; gap: 10px; }
+        .input-style { flex: 1; padding: 12px 16px; background: #2a3942; border: 1px solid #374248; border-radius: 8px; color: white; font-size: 15px; outline: none; }
+        .input-style:focus { border-color: #00a884; }
+        .btn-green { background: #00a884; color: #111b21; border: none; padding: 0 20px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+        .btn-green:hover { background: #008069; }
+
+        /* 3. क्विक एक्शन बटन (लिंक जनरेटर और रैंडम मैच) */
+        .action-grid { display: grid; grid-template-columns: 14pt 1fr; gap: 12px; grid-template-columns: 1fr 1fr; }
+        .btn-action { padding: 12px; border-radius: 8px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s; }
+        .btn-action:active { transform: scale(0.98); }
+        .btn-link { background: #2a3942; color: #e9edef; border: 1px solid #374248; }
+        .btn-link:hover { background: #374248; color: #00a884; }
+        .btn-random { background: linear-gradient(135deg, #00a884, #00d2c4); color: #111b21; }
+        .btn-random:hover { opacity: 0.9; }
+
+        /* 4. चैट लिस्ट एरिया */
+        .chat-list-section { flex: 1; background: #222e35; border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; min-height: 250px; }
+        .list-title { font-size: 14px; color: #8696a0; margin-bottom: 12px; padding-left: 5px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* प्रीमियम हाइडर बॉक्स का छोटा ट्रिगर */
+        .premium-lock-icon { color: #667781; cursor: pointer; font-size: 14px; }
+        .premium-lock-icon:hover { color: #00a884; }
+
+        .chats-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        
+        /* चैट आइटम डिजाइन */
+        .chat-item { display: flex; align-items: center; padding: 12px; background: #2a3942; border-radius: 8px; cursor: pointer; transition: background 0.2s; border: 1px solid #374248; }
+        .chat-item:hover { background: #374248; }
+        .chat-avatar { width: 40px; height: 40px; background: #00a884; color: #111b21; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; margin-right: 12px; }
+        .chat-info { flex: 1; }
+        .chat-name { font-size: 15px; font-weight: 600; color: #e9edef; margin-bottom: 2px; }
+        .chat-preview { font-size: 13px; color: #8696a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+        
+        .no-chats { text-align: center; color: #667781; font-size: 14px; margin: auto 0; padding: 20px; }
+
+        /* 5. सीक्रेट चैट हाइडर बॉक्स (Modal Popup) */
+        .hidden-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 20, 26, 0.95); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .hidden-box { background: #222e35; width: 100%; max-width: 400px; border-radius: 12px; padding: 25px; text-align: center; border: 1px solid #ffb703; box-shadow: 0 0 20px rgba(255, 183, 3, 0.2); }
+        .premium-tag { background: #ffb703; color: #111b21; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 10px; }
+        .hidden-title { font-size: 18px; color: #e9edef; font-weight: bold; margin-bottom: 15px; }
+
+        /* 6. फुटर */
+        .safety-note { text-align: center; padding: 15px; font-size: 12px; color: #8696a0; border-top: 1px solid #222e35; background: #111b21; font-weight: 500; }
+        .alert-color { color: #00a884; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. टॉप हेडर -->
+    <div class="app-header">
+        <div class="header-left">
+            <img src="https://i.ibb.co/PSw1sBG/WA-1780300553063.jpg" alt="Logo" class="logo-circle">
+            <div class="brand-title">गुपचुप</div>
+        </div>
+        <div id="myIdBadge" class="user-id-badge" onclick="copyMyID()">ID: Loading...</div>
+    </div>
+
+    <!-- मुख्य कंटेनर -->
+    <div class="main-container">
+        
+        <!-- 2. गुपचुप आईडी सर्च बॉक्स -->
+        <div class="search-box">
+            <div class="box-title">🔍 गुप्त दोस्त की आईडी सर्च करें</div>
+            <div class="search-wrapper">
+                <input type="text" id="partnerIdInput" class="input-style" placeholder="जैसे: Secret_King_1234">
+                <button class="btn-green" onclick="startNewChat()">चैट करें</button>
+            </div>
+        </div>
+
+        <!-- 3. क्विक एक्शन बटन (लिंक जनरेटर और रैंडम मैच) -->
+        <div class="action-grid">
+            <button class="btn-action btn-link" onclick="generateInviteLink()">
+                🔗 डायरेक्ट चैट लिंक
+            </button>
+            <button class="btn-action btn-random" onclick="startGuptMatch()">
+                🎲 Gupt Match (रैंडम)
+            </button>
+        </div>
+
+        <!-- 4. सक्रिय चैट सूची (Active Inbox) -->
+        <div class="chat-list-section">
+            <div class="list-title">
+                <span>आपकी हालिया बातचीत (Active Chats)</span>
+                <!-- सीक्रेट हाइडर बॉक्स खोलने का सीक्रेट बटन -->
+                <span class="premium-lock-icon" onclick="triggerSecretBox()">🔒</span>
+            </div>
+            <div id="chatsContainer" class="chats-container">
+                <div class="no-chats">अभी कोई एक्टिव चैट नहीं है। ऊपर आईडी सर्च करके या रैंडम मैच दबाकर चैट शुरू करें!</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 5. सीक्रेट चैट हाइडर बॉक्स (Premium Modal) -->
+    <div id="secretBoxModal" class="hidden-modal">
+        <div class="hidden-box">
+            <span class="premium-tag">PREMIUM FEATURE (₹99)</span>
+            <div class="hidden-title">🔐 सीक्रेट चैट हाइडर बॉक्स</div>
+            <p style="font-size: 13px; color: #8696a0; margin-bottom: 20px;">छिपी हुई चैट्स को देखने के लिए अपना गुप्त कोड डायल करें।</p>
+            <input type="password" id="secretCodeInput" class="input-style" placeholder="जैसे: *#99#" style="text-align: center; font-size: 18px; letter-spacing: 4px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-action btn-link" style="flex:1;" onclick="closeSecretBox()">बंद करें</button>
+                <button class="btn-green" style="flex:1; border-radius:8px;" onclick="unlockSecretBox()">खोलें</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. फुटर - 7 दिन ऑटो क्लीन नोट -->
+    <div class="safety-note">
+        🔒 सुरक्षा नियम: डेटा प्राइवेसी के तहत आपके सभी सीक्रेट मैसेजेस <span class="alert-color">7 दिन बाद</span> ऑटोमैटिक डिलीट कर दिए जाते हैं।
+    </div>
+
+    <script>
+        // 🔗 फायरबेस कॉन्फ़िगरेशन
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYCVE3YIwhu1kCA0ITLiOr-BXGQeA8cB8",
+            authDomain: "mg-astrology.firebaseapp.com",
+            projectId: "mg-astrology",
+            storageBucket: "mg-astrology.firebasestorage.app",
+            messagingSenderId: "261563877993",
+            appId: "1:261563877993:web:b0ce3be4f40521a78ef0f8",
+            measurementId: "G-9BXEP9NB0C",
+            databaseURL: "https://mg-astrology-default-rtdb.firebaseio.com/"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const myGupchupID = localStorage.getItem('gupchup_id');
+        const myUID = localStorage.getItem('gupchup_uid');
+
+        // पेज लोड होते ही डेटा चेक करना
+        window.onload = function() {
+            if (!myGupchupID || !myUID) {
+                alert("कृपया पहले लॉगिन करें!");
+                window.location.href = "index.html";
+                return;
+            }
+            document.getElementById('myIdBadge').innerText = "ID: " + myGupchupID;
+        };
+
+        // खुद की आईडी कॉपी करने का फंक्शन
+        function copyMyID() {
+            navigator.clipboard.writeText(myGupchupID);
+            alert("आपकी गुपचुप आईडी कॉपी हो गई है: " + myGupchupID);
+        }
+
+        // Feature 2: आईडी सर्च करके चैट शुरू करना
+        function startNewChat() {
+            var partnerID = document.getElementById('partnerIdInput').value.trim();
+            if (partnerID === "") {
+                alert("कृपया अपने दोस्त की गुपचुप आईडी डालें!");
+                return;
+            }
+            if (partnerID === myGupchupID) {
+                alert("आप खुद की आईडी से चैट नहीं कर सकते!");
+                return;
+            }
+            alert(partnerID + " के साथ नया चैट रूम कनेक्ट किया जा रहा है...");
+        }
+
+        // Feature 5: डायरेक्ट इनवाइट लिंक जनरेटर
+        function generateInviteLink() {
+            var inviteUrl = window.location.origin + "/gupchup-chat/index.html?invite=" + myGupchupID;
+            navigator.clipboard.writeText(inviteUrl);
+            alert("✨ आपका डायरेक्ट चैट लिंक कॉपी हो गया है!\nइसे अपने इंस्टाग्राम बायो या सोशल मीडिया पर शेयर करें।");
+        }
+
+        // Feature 6: Gupt Match (रैंडम चैट रूम)
+        function startGuptMatch() {
+            alert("🎲 ऑनलाइन एक्टिव अनजान यूजर्स को ढूंढा जा रहा है... बिना पहचान बताए रैंडम चैट रूम बस कुछ ही देर में चालू होगा!");
+        }
+
+        // Feature 7: सीक्रेट चैट हाइडर बॉक्स (प्रीमियम) ट्रिगर
+        function triggerSecretBox() {
+            document.getElementById('secretBoxModal').style.display = 'flex';
+        }
+        function closeSecretBox() {
+            document.getElementById('secretBoxModal').style.display = 'none';
+            document.getElementById('secretCodeInput').value = "";
+        }
+        function unlockSecretBox() {
+            var code = document.getElementById('secretCodeInput').value.trim();
+            if(code === "*#99#") {
+                alert("🔓 सीक्रेट बॉक्स अनलॉक हो गया! (यह प्रीमियम फीचर एक्टिवेट होने के बाद आपकी छिपी हुई चैट्स यहाँ दिखाई देंगी।)");
+                closeSecretBox();
+            } else {
+                alert("❌ गलत गुप्त कोड! कृपया सही प्रीमियम कोड डालें।");
+            }
+        }
+    </script>
+</body>
+</html>
