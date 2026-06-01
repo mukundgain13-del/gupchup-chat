@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>गुपचुप चैट - लॉगिन</title>
+    <!-- फायरबेस की मुख्य लाइब्रेरीज़ -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #111b21; display: flex; flex-direction: column; height: 100vh; color: #e9edef; justify-content: space-between; overflow: hidden; }
+        
+        /* 1. हेडर स्टाइल (लेफ्ट में गोल लोगो, बगल में बड़ा गुपचुप) */
+        .app-header { display: flex; align-items: center; padding: 20px; background: #202c33; width: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .logo-circle { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #00a884; margin-right: 15px; aspect-ratio: 1 / 1; }
+        .brand-title { font-size: 26px; font-weight: bold; color: #e9edef; letter-spacing: 1px; }
+
+        /* 2. बीच में लॉगिन ग्रुप */
+        .main-content { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .login-container { background: #222e35; width: 100%; max-width: 400px; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center; }
+        .subtitle { font-size: 14px; color: #8696a0; margin-bottom: 25px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 14px; color: #00a884; margin-bottom: 8px; font-weight: 600; }
+        .input-field { width: 100%; padding: 12px 16px; background: #2a3942; border: 1px solid #374248; border-radius: 8px; color: white; font-size: 16px; outline: none; }
+        .input-field:focus { border-color: #00a884; }
+        .btn-submit { width: 100%; background: #00a884; color: #111b21; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .btn-submit:hover { background: #008069; }
+
+        /* 3. नीचे फुटर (टर्म्स और कॉपीराइट) */
+        .app-footer { background: #111b21; text-align: center; padding: 15px; font-size: 13px; color: #8696a0; border-top: 1px solid #222e35; }
+        .terms-link { color: #00a884; text-decoration: none; cursor: pointer; font-weight: 600; display: inline-block; margin-bottom: 5px; }
+        .terms-link:hover { text-decoration: underline; }
+        .copyright-text { font-size: 12px; color: #667781; }
+
+        /* 4. नियम और शर्तें पॉप-अप (Modal) स्टाइल */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 20, 26, 0.85); display: none; justify-content: center; align-items: center; z-index: 999; padding: 20px; }
+        .modal-box { background: #222e35; width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 80vh; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px; border-bottom: 1px solid #2a3942; }
+        .modal-title { font-size: 18px; font-weight: bold; color: #00a884; }
+        .modal-close-btn { background: none; border: none; color: #8696a0; font-size: 22px; cursor: pointer; font-weight: bold; }
+        .modal-close-btn:hover { color: #e9edef; }
+        .modal-body { padding: 20px; overflow-y: auto; text-align: left; font-size: 14px; line-height: 1.6; color: #e9edef; }
+        .modal-body h4 { color: #00a884; margin-top: 15px; margin-bottom: 5px; font-size: 15px; }
+        .modal-body h4:first-child { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. हेडर: लेफ्ट में गोल लोगो, बगल में गुपचुप -->
+    <div class="app-header">
+        <img src="https://i.ibb.co/PSw1sBG/WA-1780300553063.jpg" alt="GupChup Logo" class="logo-circle">
+        <div class="brand-title">गुपचुप</div>
+    </div>
+
+    <!-- 2. बीच में लॉगिन का मुख्य ग्रुप -->
+    <div class="main-content">
+        <div class="login-container">
+            <div class="subtitle">इंडिया का सबसे सुरक्षित गुप्त चैट प्लेटफॉर्म</div>
+
+            <!-- गुप्त नाम इनपुट -->
+            <div class="input-group">
+                <label for="nickNameInput">अपना गुप्त नाम (Nick Name)</label>
+                <input type="text" id="nickNameInput" class="input-field" placeholder="जैसे: Secret_King, Angel_Eyes..." maxlength="15">
+            </div>
+
+            <!-- सीक्रेट पिन इनपुट -->
+            <div class="input-group">
+                <label for="secretPinInput">सीक्रेट पिन (4 या 6 अंकों का पासवर्ड)</label>
+                <input type="password" id="secretPinInput" class="input-field" placeholder="दूसरे डिवाइस में लॉगिन के लिए..." pattern="[0-9]*" inputmode="numeric">
+            </div>
+
+            <button class="btn-submit" onclick="handleGupchupLogin()">चैट की दुनिया में कदम रखें ➤</button>
+        </div>
+    </div>
+
+    <!-- 3. फुटर: नियम व शर्तें और कॉपीराइट -->
+    <div class="app-footer">
+        <div class="terms-link" onclick="toggleTermsModal(true)">नियम और शर्तें (Terms & Conditions)</div>
+        <div class="copyright-text">Copyright © 2026 GupChup. सर्वाधिकार सुरक्षित।</div>
+    </div>
+
+    <!-- 4. नियम और शर्तें पॉप-अप बॉक्स (Modal) -->
+    <div id="termsModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">📝 नियम और शर्तें (Terms & Conditions)</div>
+                <button class="modal-close-btn" onclick="toggleTermsModal(false)">❌</button>
+            </div>
+            <div class="modal-body">
+                <h4>1. गोपनीयता और पहचान (Privacy & Identity):</h4>
+                <p>यह ऐप पूरी तरह से गुमनाम (Anonymous) है। यूजर की असली पहचान सुरक्षित रखना हमारी प्राथमिकता है, लेकिन यूजर अपने द्वारा साझा की गई जानकारी के लिए स्वयं जिम्मेदार होगा।</p>
+
+                <h4>2. कांटेक्ट लिस्ट और डेटा सुरक्षा (Contact & Data Privacy):</h4>
+                <p>हम आपकी प्राइवेसी का पूरा सम्मान करते हैं। यह ऐप आपकी मोबाइल कांटेक्ट लिस्ट (Contact List) को न तो सिंक (Sync) करता है, न ही इसे किसी सर्वर पर स्टोर करता है और न ही किसी तीसरे व्यक्ति के साथ साझा करता है। आप ऐप पर पूरी तरह से गुमनाम होकर चैट कर सकते हैं, और आपकी कांटेक्ट लिस्ट पूरी तरह सुरक्षित और निजी रहती है।</p>
+
+                <h4>3. अनुचित व्यवहार (Zero Tolerance Policy):</h4>
+                <p>किसी भी प्रकार की अश्लीलता, धमकी, अभद्र भाषा या अवैध गतिविधियों की अनुमति नहीं है। ऐसा पाए जाने पर यूजर की आईडी को बिना किसी पूर्व सूचना के स्थायी रूप से ब्लॉक कर दिया जाएगा।</p>
+
+                <h4>4. स्क्रीनशॉट और डेटा (Data & Media):</h4>
+                <p>ऐप के अंदर सुरक्षा फीचर्स (जैसे स्क्रीनशॉट ब्लॉक) दिए गए हैं, लेकिन यूजर को अपनी निजी फोटो या जानकारी साझा करते समय सावधानी बरतनी चाहिए। हम किसी भी डेटा चोरी के लिए सीधे जिम्मेदार नहीं होंगे।</p>
+
+                <h4>5. उम्र की सीमा (Age Limit):</h4>
+                <p>इस ऐप का उपयोग केवल 18 वर्ष से अधिक आयु के लोग ही कर सकते हैं।</p>
+
+                <h4>6. कॉपीराइट (Copyright Notice):</h4>
+                <p>Copyright © 2026 GupChup. सर्वाधिकार सुरक्षित। इस ऐप का कोई भी हिस्सा बिना अनुमति के कॉपी करना कानूनी अपराध है।</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🔗 आपका फायरबेस कॉन्फ़िगरेशन
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYCVE3YIwhu1kCA0ITLiOr-BXGQeA8cB8",
+            authDomain: "mg-astrology.firebaseapp.com",
+            projectId: "mg-astrology",
+            storageBucket: "mg-astrology.firebasestorage.app",
+            messagingSenderId: "261563877993",
+            appId: "1:261563877993:web:b0ce3be4f40521a78ef0f8",
+            measurementId: "G-9BXEP9NB0C",
+            databaseURL: "https://mg-astrology-default-rtdb.firebaseio.com/"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // पॉप-अप खोलने और बंद (Back) करने का फंक्शन
+        function toggleTermsModal(show) {
+            const modal = document.getElementById('termsModal');
+            modal.style.display = show ? 'flex' : 'none';
+        }
+
+        // ⏱️ ऑटो-लॉगिन मेमोरी चेकर (localStorage)
+        window.onload = function() {
+            var savedGupchupID = localStorage.getItem('gupchup_id');
+            if (savedGupchupID) {
+                console.log("पहले से लॉगिन है:", savedGupchupID);
+                window.location.href = "inbox.html"; 
+            }
+        };
+
+        function handleGupchupLogin() {
+            var nickName = document.getElementById('nickNameInput').value.trim();
+            var secretPin = document.getElementById('secretPinInput').value.trim();
+
+            if (nickName === "") {
+                alert("कृपया अपना कोई भी गुप्त नाम लिखें!");
+                return;
+            }
+            if (secretPin.length < 4 || secretPin.length > 6 || isNaN(secretPin)) {
+                alert("सीक्रेट पिन केवल 4 या 6 अंकों का नंबर होना चाहिए!");
+                return;
+            }
+
+            // 🚀 अनाम लॉगिन
+            firebase.auth().signInAnonymously()
+                .then((userCredential) => {
+                    var user = userCredential.user;
+                    var firebaseUID = user.uid;
+
+                    var randomNumber = Math.floor(1000 + Math.random() * 9000);
+                    var finalGupchupID = nickName + "_" + randomNumber;
+
+                    // 💾 फायरबेस में डेटा स्टोर करना
+                    database.ref('gupchup_users/' + firebaseUID).set({
+                        gupchup_id: finalGupchupID,
+                        nick_name: nickName,
+                        secret_pin: secretPin,
+                        created_at: Date.now()
+                    }).then(() => {
+                        localStorage.setItem('gupchup_uid', firebaseUID);
+                        localStorage.setItem('gupchup_id', finalGupchupID);
+                        localStorage.setItem('gupchup_name', nickName);
+
+                        alert("आपकी यूनिक गुपचुप आईडी बनी: " + finalGupchupID);
+                        window.location.href = "inbox.html";
+                    });
+                })
+                .catch((error) => {
+                    console.error("लॉगिन एरर:", error.message);
+                    alert("सर्वर से जुड़ने में समस्या आई, कृपया दोबारा प्रयास करें।");
+                });
+        }
+    </script>
+</body>
+</html>
+
