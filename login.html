@@ -4,22 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>गुपचुप चैट - लॉगिन</title>
-    <!-- फायरबेस की मुख्य लाइब्रेरीज़ -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #111b21; display: flex; flex-direction: column; height: 100vh; color: #e9edef; justify-content: space-between; overflow: hidden; }
+        
+        /* मोबाइल स्क्रीन पर छिपने से रोकने के लिए बेहतर बॉडी सेटिंग */
+        body { 
+            background-color: #111b21; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            color: #e9edef; 
+        }
         
         /* 1. हेडर स्टाइल (लेफ्ट में गोल लोगो, बगल में बड़ा गुपचुप) */
-        .app-header { display: flex; align-items: center; padding: 20px; background: #202c33; width: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .app-header { display: flex; align-items: center; padding: 18px 20px; background: #202c33; width: 100%; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
         .logo-circle { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #00a884; margin-right: 15px; aspect-ratio: 1 / 1; }
         .brand-title { font-size: 26px; font-weight: bold; color: #e9edef; letter-spacing: 1px; }
 
-        /* 2. बीच में लॉगिन ग्रुप */
-        .main-content { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        /* 2. बीच में लॉगिन ग्रुप (स्पेसिंग को सुधारा गया) */
+        .main-content { flex: 1; display: flex; justify-content: center; align-items: center; padding: 25px 20px; }
         .login-container { background: #222e35; width: 100%; max-width: 400px; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); text-align: center; }
         .subtitle { font-size: 14px; color: #8696a0; margin-bottom: 25px; }
         .input-group { margin-bottom: 20px; text-align: left; }
@@ -29,9 +36,9 @@
         .btn-submit { width: 100%; background: #00a884; color: #111b21; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
         .btn-submit:hover { background: #008069; }
 
-        /* 3. नीचे फुटर (टर्म्स और कॉपीराइट) */
-        .app-footer { background: #111b21; text-align: center; padding: 15px; font-size: 13px; color: #8696a0; border-top: 1px solid #222e35; }
-        .terms-link { color: #00a884; text-decoration: none; cursor: pointer; font-weight: 600; display: inline-block; margin-bottom: 5px; }
+        /* 3. नीचे फुटर (लॉगिन डिब्बे के ठीक नीचे सटीक दूरी पर सेट) */
+        .app-footer { text-align: center; padding: 20px 15px; font-size: 13px; color: #8696a0; margin-top: auto; }
+        .terms-link { color: #00a884; text-decoration: none; cursor: pointer; font-weight: 600; display: inline-block; margin-bottom: 6px; }
         .terms-link:hover { text-decoration: underline; }
         .copyright-text { font-size: 12px; color: #667781; }
 
@@ -49,24 +56,20 @@
 </head>
 <body>
 
-    <!-- 1. हेडर: लेफ्ट में गोल लोगो, बगल में गुपचुप -->
     <div class="app-header">
         <img src="https://i.ibb.co/PSw1sBG/WA-1780300553063.jpg" alt="GupChup Logo" class="logo-circle">
         <div class="brand-title">गुपचुप</div>
     </div>
 
-    <!-- 2. बीच में लॉगिन का मुख्य ग्रुप -->
     <div class="main-content">
         <div class="login-container">
             <div class="subtitle">इंडिया का सबसे सुरक्षित गुप्त चैट प्लेटफॉर्म</div>
 
-            <!-- गुप्त नाम इनपुट -->
             <div class="input-group">
                 <label for="nickNameInput">अपना गुप्त नाम (Nick Name)</label>
                 <input type="text" id="nickNameInput" class="input-field" placeholder="जैसे: Secret_King, Angel_Eyes..." maxlength="15">
             </div>
 
-            <!-- सीक्रेट पिन इनपुट -->
             <div class="input-group">
                 <label for="secretPinInput">सीक्रेट पिन (4 या 6 अंकों का पासवर्ड)</label>
                 <input type="password" id="secretPinInput" class="input-field" placeholder="दूसरे डिवाइस में लॉगिन के लिए..." pattern="[0-9]*" inputmode="numeric">
@@ -76,13 +79,11 @@
         </div>
     </div>
 
-    <!-- 3. फुटर: नियम व शर्तें और कॉपीराइट -->
     <div class="app-footer">
         <div class="terms-link" onclick="toggleTermsModal(true)">नियम और शर्तें (Terms & Conditions)</div>
         <div class="copyright-text">Copyright © 2026 GupChup. सर्वाधिकार सुरक्षित।</div>
     </div>
 
-    <!-- 4. नियम और शर्तें पॉप-अप बॉक्स (Modal) -->
     <div id="termsModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -107,6 +108,9 @@
 
                 <h4>6. कॉपीराइट (Copyright Notice):</h4>
                 <p>Copyright © 2026 GupChup. सर्वाधिकार सुरक्षित। इस ऐप का कोई भी हिस्सा बिना अनुमति के कॉपी करना कानूनी अपराध है।</p>
+
+                <h4>7. चैट बैकअप और डेटा डिलीट (Chat Backup & Deletion):</h4>
+                <p>चूँकि यह एक पूरी तरह सुरक्षित और गुप्त चैट प्लेटफॉर्म है, इसलिए हमारे सर्वर पर आपकी चैट का कोई स्थायी (Permanent) बैकअप नहीं रखा जाता है। चैट डिलीट करने या ऐप अनइंस्टॉल करने पर आपका मैसेज डेटा हमेशा के लिए मिट जाएगा, जिसे दोबारा रिकवर नहीं किया जा सकता।</p>
             </div>
         </div>
     </div>
@@ -187,4 +191,3 @@
     </script>
 </body>
 </html>
-
