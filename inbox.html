@@ -85,7 +85,8 @@
         <div class="search-box">
             <div class="box-title">🔍 गुप्त दोस्त की आईडी सर्च करें</div>
             <div class="search-wrapper">
-                <input type="text" id="partnerIdInput" class="input-style" placeholder="जैसे: Secret_King_1234">
+                <!-- ⌨️ कीबोर्ड तीर के लिए onkeypress यहाँ जोड़ा गया है -->
+                <input type="text" id="partnerIdInput" class="input-style" placeholder="जैसे: Secret_King_1234" onkeypress="checkEnterKey(event)">
                 <button class="btn-green" onclick="startNewChat()">चैट करें</button>
             </div>
         </div>
@@ -156,6 +157,13 @@
             }
             document.getElementById('myIdBadge').innerText = "ID: " + myGupchupID;
         };
+
+        // ⌨️ कीबोर्ड का तीर (Enter) बटन दबाते ही सीधे एक्शन चालू करने का लॉजिक
+        function checkEnterKey(event) {
+            if (event.key === 'Enter') {
+                startNewChat();
+            }
+        }
 
         // खुद की आईडी कॉपी करने का फंक्शन
         function copyMyID() {
