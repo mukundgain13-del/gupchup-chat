@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>गुपचुप चैट - एडमिन कंट्रोल पैनल</title>
+    <!-- फायरबेस लाइब्रेरीज़ -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { 
+            background-color: #111b21; 
+            color: #e9edef; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+        }
+
+        .admin-container { 
+            background: #222e35; 
+            width: 100%; 
+            max-width: 500px; 
+            height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* 1. हेडर एरिया और एक्टिव रूम ट्रैकर */
+        .admin-header {
+            background-color: #202c33; 
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-bottom: 2px solid #00a884;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title { font-size: 18px; font-weight: bold; color: #00a884; letter-spacing: 0.5px; }
+        
+        /* एक्टिव रूम ट्रैकर बैज */
+        .tracker-badge {
+            background-color: rgba(0, 168, 132, 0.2);
+            color: #00a884;
+            border: 1px solid #00a884;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* 4. मैन्युअल डेटा पज (Data Purge) बटन एरिया */
+        .purge-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111b21;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 5px;
+        }
+        .purge-info-text { font-size: 12px; color: #8696a0; }
+        .btn-purge {
+            background-color: #ea0038;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-purge:hover { background-color: #c2002f; }
+
+        /* सर्च बॉक्स एरिया */
+        .search-area {
+            padding: 12px 15px;
+            background-color: #111b21;
+            border-bottom: 1px solid #2a3942;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            background-color: #2a3942;
+            border: 1px solid #374248;
+            border-radius: 20px;
+            outline: none;
+            font-size: 15px;
+            color: white;
+        }
+        .search-input::placeholder { color: #8696a0; }
+
+        /* 1. यूजर मैनेजमेंट डैशबोर्ड लिस्ट */
+        .user-list-window {
+            flex: 1;
+            overflow-y: auto; 
+            background-color: #111b21;
+            padding: 10px 0;
+        }
+
+        .no-user-notice {
+            text-align: center;
+            color: #8696a0;
+            font-size: 14px;
+            margin-top: 40px;
+            padding: 0 20px;
+            line-height: 1.6;
+        }
+
+        .user-item {
+            padding: 14px 20px;
+            border-bottom: 1px solid #2a3942;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-item:hover { background-color: #202c33; }
+
+        .user-info-box {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+        .user-id-text { font-size: 15px; font-weight: bold; color: #e9edef; display: flex; align-items: center; gap: 8px; }
+        
+        .banned-tag {
+            background-color: rgba(234, 0, 56, 0.15);
+            color: #ea0038;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #ea0038;
+            font-weight: bold;
+        }
+
+        /* 2. सर्च एवं ब्लॉक सिस्टम बटन स्टाइल */
+        .btn-block-toggle {
+            background-color: #2a3942;
+            color: #ea0038;
+            border: 1px solid #ea0038;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-block-toggle.banned {
+            background-color: #00a884;
+            color: #111b21;
+            border: 1px solid #00a884;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        
+        <!-- हेडर एरिया -->
+        <div class="admin-header">
+            <div class="header-top">
+                <div class="header-title">🛡️ गुपचुप कंट्रोल पैनल</div>
+                <!-- 3. एक्टिव रूम ट्रैकर -->
+                <div class="tracker-badge" id="activeRoomsCount">एक्टिव रूम: 0</div>
+            </div>
+            
+            <!-- 4. मैन्युअल डेटा पज (Data Purge) -->
+            <div class="purge-area">
+                <div class="purge-info-text">🧹 पुराने या बंद पड़े चैट रूम साफ़ करें:</div>
+                <button class="btn-purge" onclick="purgeOldData()">डेटा साफ़ करें</button>
+            </div>
+        </div>
+
+        <!-- सर्च बॉक्स -->
+        <div class="search-area">
+            <input type="text" id="adminSearchInput" class="search-input" placeholder="🔍 यूजर आईडी ढूंढें..." oninput="filterUsers()">
+        </div>
+
+        <!-- 1. यूजर मैनेजमेंट लिस्ट विंडो -->
+        <div class="user-list-window" id="userListWindow">
+            <div class="no-user-notice" id="emptyUserNotice">
+                👤 अभी सर्वर पर कोई यूजर रजिस्टर्ड नहीं है।
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 🚀 आपका सहेजा हुआ सुरक्षित फायरबेस कोड
+        const firebaseConfig = {
+            apiKey: "AIzaSyBq-lBqMi4nDmSImvH_yp1Wf1sdPRM8T5E",
+            authDomain: "gupchup-chat-42284.firebaseapp.com",
+            projectId: "gupchup-chat-42284",
+            storageBucket: "gupchup-chat-42284.firebasestorage.app",
+            messagingSenderId: "466844600607",
+            appId: "1:466844600607:web:f09db730e62b7c555b482a",
+            measurementId: "G-041PKMSPM7",
+            databaseURL: "https://gupchup-chat-42284-default-rtdb.firebaseio.com/"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        window.onload = function() {
+            syncUserDashboard();
+            syncActiveRoomTracker();
+        };
+
+        // 1. यूजर मैनेजमेंट डैशबोर्ड और 2. ब्लॉक सिस्टम लॉजिक
+        function syncUserDashboard() {
+            database.ref('users').on('value', function(snapshot) {
+                const listWindow = document.getElementById('userListWindow');
+                const emptyNotice = document.getElementById('emptyUserNotice');
+                
+                listWindow.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    if (emptyNotice) emptyNotice.style.display = 'none';
+                    
+                    const usersData = snapshot.val();
+                    let hasUsers = false;
+
+                    Object.keys(usersData).forEach((userId) => {
+                        hasUsers = true;
+                        const user = usersData[userId];
+                        const isBanned = user.banned === true;
+
+                        const item = document.createElement('div');
+                        item.className = "user-item";
+                        item.id = "user_" + userId.toLowerCase();
+
+                        // यूजर इनफ़ो बॉक्स
+                        const infoBox = document.createElement('div');
+                        infoBox.className = "user-info-box";
+                        
+                        let banTagHtml = isBanned ? `<span class="banned-tag">बैन है</span>` : '';
+                        infoBox.innerHTML = `<div class="user-id-text">👤 ${userId} ${banTagHtml}</div>`;
+                        item.appendChild(infoBox);
+
+                        // ब्लॉक/अनब्लॉक बटन
+                        const actionBtn = document.createElement('button');
+                        if (isBanned) {
+                            actionBtn.className = "btn-block-toggle banned";
+                            actionBtn.innerText = "✅ अनबैन करें";
+                            actionBtn.onclick = function() { toggleUserBan(userId, false); };
+                        } else {
+                            actionBtn.className = "btn-block-toggle";
+                            actionBtn.innerText = "🚫 ब्लॉक करें";
+                            actionBtn.onclick = function() { toggleUserBan(userId, true); };
+                        }
+                        
+                        item.appendChild(actionBtn);
+                        listWindow.appendChild(item);
+                    });
+
+                    if (!hasUsers) { showEmptyNotice(); }
+                } else {
+                    showEmptyNotice();
+                }
+            });
+        }
+
+        function showEmptyNotice() {
+            const listWindow = document.getElementById('userListWindow');
+            const emptyNotice = document.getElementById('emptyUserNotice');
+            listWindow.innerHTML = '';
+            if (emptyNotice) {
+                listWindow.appendChild(emptyNotice);
+                emptyNotice.style.display = 'block';
+            }
+        }
+
+        // 2. यूजर को हमेशा के लिए बैन/अनबैन करने का फंक्शन
+        function toggleUserBan(userId, shouldBan) {
+            const actionText = shouldBan ? "ब्लॉक (बैन)" : "अनबैन";
+            if (confirm(`क्या आप निश्चित रूप से यूजर "${userId}" को हमेशा के लिए ${actionText} करना चाहते हैं?`)) {
+                database.ref('users/' + userId).update({
+                    banned: shouldBan
+                }).then(() => {
+                    alert(`यूजर सफलतापूर्वक ${actionText} कर दिया गया है!`);
+                });
+            }
+        }
+
+        // 3. एक्टिव चैट रूम की लाइव संख्या ट्रैक करना
+        function syncActiveRoomTracker() {
+            database.ref('chats').on('value', function(snapshot) {
+                const trackerBadge = document.getElementById('activeRoomsCount');
+                if (snapshot.exists()) {
+                    const allRooms = snapshot.val();
+                    // फ़ायरबेस से मुख्य कुंजियों (चैट रूम्स) की लाइव संख्या गिनना
+                    const roomCount = Object.keys(allRooms).length;
+                    trackerBadge.innerText = "एक्टिव रूम: " + roomCount;
+                } else {
+                    trackerBadge.innerText = "एक्टिव रूम: 0";
+                }
+            });
+        }
+
+        // 4. मैन्युअल डेटा पज (Data Purge) - पुराने खातों / चैट्स को एक क्लिक में साफ करना
+        function purgeOldData() {
+            if (confirm("⚠️ चेतावनी: क्या आप सचमुच पूरे सर्वर का पुराना चैट डेटा और बंद खाते हमेशा के लिए एक क्लिक में साफ करना चाहते हैं? इससे सारा पुराना इतिहास मिट जाएगा।")) {
+                database.ref('chats').remove().then(() => {
+                    alert("🧹 सर्वर को पूरी तरह हल्का कर दिया गया है! सारा पुराना चैट डेटा साफ़ हो चुका है।");
+                }).catch((error) => {
+                    alert("एरर: डेटा साफ नहीं हो पाया: " + error.message);
+                });
+            }
+        }
+
+        // सर्च बार से किसी यूजर आईडी को फ़िल्टर करना
+        function filterUsers() {
+            const input = document.getElementById('adminSearchInput').value.toLowerCase().trim();
+            const items = document.getElementsByClassName('user-item');
+            
+            for (let i = 0; i < items.length; i++) {
+                const userIdAttr = items[i].id.replace("user_", "");
+                if (userIdAttr.includes(input)) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
