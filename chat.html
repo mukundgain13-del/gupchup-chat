@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>गुपचुप चैट - चैट रूम</title>
-    <!-- फायरबेस लाइब्रेरीज़ -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
@@ -61,9 +60,8 @@
         
         .header-actions { display: flex; align-items: center; gap: 20px; }
         
-        /* 👑 प्रीमियम लॉक बटन स्टाइल */
-        .premium-lock-container { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
-        .btn-premium-lock { 
+        /* 👑 सुधरा हुआ एक्शन बटन (बिना ताले और लेबल के) */
+        .btn-direct-action { 
             background: #2a3942; 
             border: none; 
             font-size: 16px; 
@@ -75,9 +73,9 @@
             align-items: center; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: transform 0.2s;
+            cursor: pointer;
         }
-        .premium-lock-container:hover .btn-premium-lock { transform: scale(1.1); }
-        .premium-text-label { font-size: 10px; color: #ffb703; font-weight: bold; }
+        .btn-direct-action:hover { transform: scale(1.1); }
 
         /* 7. मैजिक वैनिश मोड टॉगल */
         .btn-vanish-toggle { background: none; border: none; font-size: 22px; cursor: pointer; filter: grayscale(1); transition: filter 0.2s; }
@@ -95,29 +93,8 @@
             flex-direction: column; 
             gap: 10px; 
             z-index: 5;
-            margin-bottom: 75px; /* इसके कारण डैशबोर्ड और चैट पट्टी एकदम सही एड्रेस में बीच में रहेंगे */
+            margin-bottom: 75px; /* इसके कारण डैशबोर्डและ चैट पट्टी एकदम सही एड्रेस में बीच में रहेंगे */
         }
-
-        /* 👑 प्रीमियम पॉप-अप मुख्य कंटेनर */
-        .premium-popup-box {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11,20,26,0.9);
-            display: none; justify-content: center; align-items: center;
-            z-index: 20000; padding: 15px;
-        }
-        .premium-content-card {
-            background: #222e35; border-top: 4px solid #ffb703; border-radius: 12px;
-            width: 100%; max-width: 360px; padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 12px;
-            max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .premium-card-title { font-size: 16px; font-weight: bold; color: #ffb703; text-align: center; }
-        .feature-details-info { font-size: 13px; color: #e9edef; line-height: 1.5; background: #111b21; padding: 10px; border-radius: 8px; width: 100%; }
-        .qr-code-display { width: 180px; height: 180px; border: 4px solid white; border-radius: 8px; margin: 2px 0; }
-        .btn-wa-submit { width: 100%; background: #00a884; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; text-align: center; text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .btn-close-box { background: #374248; color: #e9edef; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; width: 100%; margin-top: 2px; }
-        .pin-input-field { width: 100%; padding: 10px; background: #111b21; border: 1px solid #ffb703; border-radius: 6px; color: white; text-align: center; font-size: 16px; letter-spacing: 4px; outline: none; }
-        .btn-action-hide-show { width: 100%; background: #ffb703; color: #111b21; border: none; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; }
 
         /* 1. रीयल-टाइम मैसेज बबल्स */
         .message-row { display: flex; width: 100%; }
@@ -169,8 +146,20 @@
         
         .btn-sticker { background: none; border: none; color: #8696a0; font-size: 20px; cursor: pointer; }
         
-        /* ✍️ मुख्य संदेश इनपुट - क्रोम से डिफ़ॉल्ट तीर (⏎) और स्पेस बार लाने के लिए इसे साधारण रखा है */
-        .chat-input { flex: 1; background: none; border: none; color: white; font-size: 15px; padding: 8px 0; outline: none; }
+        /* ✍️ मुख्य संदेश इनपुट - तीर (Arrow) बटन लाने के लिए इसे textarea में बदला और रीसाइज़ बंद किया */
+        .chat-input { 
+            flex: 1; 
+            background: none; 
+            border: none; 
+            color: white; 
+            font-size: 15px; 
+            padding: 8px 0; 
+            outline: none; 
+            resize: none; 
+            height: 40px; 
+            max-height: 100px; 
+            line-height: 1.4; 
+        }
         
         .btn-attachment { background: none; border: none; color: #8696a0; font-size: 20px; cursor: pointer; }
         .btn-mic { width: 38px; height: 38px; background: #00a884; border: none; border-radius: 50%; color: #111b21; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
@@ -187,40 +176,31 @@
 </head>
 <body>
 
-    <!-- 👑 वॉटरमार्क - जो हमेशा स्क्रीन के बीच में टेक्स्ट के ऊपर चलता रहेगा -->
     <div id="floatingWatermarkDisplay" class="floating-watermark">GUPCHUP</div>
 
-    <!-- 1. टॉप हेडर एरिया (फिक्स पट्टी) -->
     <div class="chat-header">
         <div class="header-left">
             <div id="statusDisplay" class="online-status"><span class="online-dot"></span>ऑनलाइन</div>
         </div>
         <div class="header-actions">
-            <div class="premium-lock-container" onclick="handlePremiumButtonClick()" title="सीक्रेट हाइडर बॉक्स">
-                <button class="btn-premium-lock">🔒</button>
-                <span class="premium-text-label">प्राइम</span>
-            </div>
+            <button class="btn-direct-action" onclick="handleDirectActionClick()">⚙️</button>
             <button id="vanishToggleBtn" class="btn-vanish-toggle" onclick="toggleVanishMode()" title="10 सेकंड वैनिश मोड">🪄</button>
             <button class="btn-exit" onclick="emergencyExit()">Emergency Exit 🏃‍♂️</button>
         </div>
     </div>
 
-    <!-- मुख्य चैट मैसेजेस एरिया -->
     <div id="chatMessagesArea" class="chat-messages-area"></div>
 
-    <!-- 3. स्वाइप/रिप्लाई प्रिव्यू बार -->
     <div id="replyPreviewBar" class="reply-preview-bar">
         <div id="replyPreviewText" class="reply-preview-text">रिप्लाई का संदेश यहाँ दिखेगा...</div>
         <div class="reply-close" onclick="cancelReply()">❌</div>
     </div>
 
-    <!-- नीचे का इनपुट कंट्रोल्स (कंट्रोल्ड कैप्सूल लेआउट) -->
     <div class="chat-input-area">
         <div class="input-box-wrapper">
             <button class="btn-sticker" onclick="triggerStickerAction()">😊</button>
             
-            <!-- यहाँ से वो 'enterkeyhint="send"' हटा दिया है, जिससे अब कीबोर्ड में डिफ़ॉल्ट मुड़ने वाला तीर (एंटर) आएगा -->
-            <input type="text" id="messageInputField" class="chat-input" placeholder="सुरक्षित संदेश टाइप करें..." onkeypress="checkEnterKey(event)">
+            <textarea id="messageInputField" class="chat-input" placeholder="सुरक्षित संदेश टाइप करें..." onkeypress="checkEnterKey(event)"></textarea>
             
             <button class="btn-attachment" onclick="triggerGallery()">📎</button>
             <input type="file" id="galleryInput" accept="image/*" style="display: none;" onchange="sendImageMessage(this)">
@@ -229,39 +209,6 @@
         <button id="micBtn" class="btn-mic" onclick="handleMicOrSendAction()">🎤</button>
     </div>
 
-    <!-- 👑 मास्टर प्रीमियम पॉप-अप बॉक्स -->
-    <div id="premiumMasterModal" class="premium-popup-box">
-        <div id="freeUserView" class="premium-content-card" style="display: none;">
-            <div class="premium-card-title">👑 गुपचुप प्रीमियम (सीक्रेट हाइडर बॉक्स)</div>
-            <div class="feature-details-info">
-                <strong>🚀 मिलने वाली खास सुविधा:</strong><br>
-                • <b>चैट पूरी तरह गायब:</b> प्रीमियम चालू होते ही आपकी पर्सनल चैट मुख्य स्क्रीन से हाइड हो जाएगी।<br>
-                • <b>एक सेकंड में वापस:</b> जब चाहें सीक्रेट पिन दबाकर इसे वापस लाएं।<br><br>
-                <strong>💳 पेमेंट सिस्टम और प्लान:</strong><br>
-                • अनलॉक फीस: मात्र <b>₹49</b> (30 दिनों के लिए)<br><br>
-                <strong>📸 एक्टिवेशन के सीधे नियम:</strong><br>
-                1. नीचे दिए गए क्यूआर कोड का स्क्रीनशॉट लें और ₹49 का पेमेंट करें।<br>
-                2. स्क्रीनशॉट व्हाट्सएप पर भेजें।
-            </div>
-            
-            <img src="https://i.ibb.co/Rk7MXX3Q/Screenshot-20260601-182118-GPay-Business.jpg" class="qr-code-display" alt="GPay Business QR">
-            
-            <a href="https://wa.me/919520466668?text=नमस्ते%20एडमिन,%20मैंने%20प्रीमियम%20के%20लिए%20₹49%20का%20पेमेंट%20कर%20दिया%20है।%20कृपया%20मेरा%20अकाउंट%20एक्टिवेट%20करें।" target="_blank" class="btn-wa-submit">
-                💬 ₹49 में प्रीमियम चालू करें - व्हाट्सएप पर भेजें
-            </a>
-            <button class="btn-close-box" onclick="closePremiumModal()">🔙 Back (पीछे जाएं)</button>
-        </div>
-
-        <div id="premiumUserView" class="premium-content-card" style="display: none;">
-            <div class="premium-card-title">🔒 सीक्रेट चैट लॉकर</div>
-            <p style="font-size: 13px; color: #8696a0; text-align: center;" id="pinBoxInstruction">चैट को छुपाने या दिखाने के लिए अपना गुप्त पिन दर्ज करें</p>
-            <input type="password" id="secretPinInput" class="pin-input-field" maxlength="4" placeholder="••••">
-            <button id="hideShowSubmitBtn" class="btn-action-hide-show" onclick="processChatHideShow()">चैट छुपाएं / दिखाएं</button>
-            <button class="btn-close-box" onclick="closePremiumModal()">🔙 Back (पीछे जाएं)</button>
-        </div>
-    </div>
-
-    <!-- 2. होल्ड टू डिलीट (पॉप-अप मोड) -->
     <div id="deleteModal" class="delete-modal">
         <div class="delete-box">
             <h3 style="font-size: 16px;">मैसेज डिलीट करें?</h3>
@@ -297,14 +244,11 @@
         let activeReplyText = "";
         let isVanishModeOn = false;
         let recognition = null;
-        let isPremiumActive = false;
         let chatHiddenStatus = false;
-        let userSavedPin = "";
 
         window.onload = function() {
             document.getElementById('floatingWatermarkDisplay').innerText = myGupchupID;
             
-            checkPremiumTimeStatus();
             loadRealtimeMessages();
             setupVoiceToText();
             setupInputSmartSwitch();
@@ -314,6 +258,8 @@
             const inputField = document.getElementById('messageInputField');
             const micBtn = document.getElementById('micBtn');
             
+            inputField.addEventListener('input', OnInput, false); 
+            
             inputField.addEventListener('input', function() {
                 if (this.value.trim().length > 0) {
                     micBtn.innerText = "➔"; 
@@ -322,6 +268,17 @@
                     micBtn.innerText = "🎤"; 
                 }
             });
+        }
+
+        function OnInput() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if(this.value === "") this.style.height = '40px';
+        }
+
+        // 🚀 नया बटन फंक्शन: बिना ताले/पिन के डायरेक्ट एक्शन करने के लिए
+        function handleDirectActionClick() {
+            executeHideAction(!chatHiddenStatus);
         }
 
         function handleMicOrSendAction() {
@@ -337,6 +294,7 @@
             const inputField = document.getElementById('messageInputField');
             inputField.value += "❤️";
             document.getElementById('micBtn').innerText = "➔"; 
+            OnInput.call(inputField); 
             inputField.focus();
         }
 
@@ -345,67 +303,6 @@
             setTimeout(() => {
                 window.location.replace("about:blank"); 
             }, 50);
-        }
-
-        function checkPremiumTimeStatus() {
-            database.ref('users/' + myGupchupID + '/premium').on('value', function(snapshot) {
-                const data = snapshot.val();
-                if (data && data.status === "active") {
-                    const currentTime = Date.now();
-                    if (data.expiryTime && currentTime > data.expiryTime) {
-                        database.ref('users/' + myGupchupID + '/premium').set({ status: "expired" });
-                        isPremiumActive = false;
-                    } else {
-                        isPremiumActive = true;
-                        userSavedPin = data.pin || "";
-                    }
-                } else {
-                    isPremiumActive = false;
-                }
-            });
-        }
-
-        function handlePremiumButtonClick() {
-            document.getElementById('premiumMasterModal').style.display = 'flex';
-            if (isPremiumActive) {
-                document.getElementById('freeUserView').style.display = 'none';
-                document.getElementById('premiumUserView').style.display = 'flex';
-                const pinInstruction = document.getElementById('pinBoxInstruction');
-                const submitBtn = document.getElementById('hideShowSubmitBtn');
-                if (!userSavedPin) {
-                    pinInstruction.innerText = "प्रीमियम एक्टिवेटेड! अपना नया 4 अंकों का गुप्त पिन सेट करें:";
-                    submitBtn.innerText = "पिन सेट करें और छुपाएं";
-                } else {
-                    pinInstruction.innerText = "चैट को छुपाने या दिखाने के लिए अपना गुप्त पिन दर्ज करें:";
-                    submitBtn.innerText = chatHiddenStatus ? "चैट वापस दिखाएं" : "चैट छुपाएं";
-                }
-            } else {
-                document.getElementById('premiumUserView').style.display = 'none';
-                document.getElementById('freeUserView').style.display = 'flex';
-            }
-        }
-
-        function processChatHideShow() {
-            const inputPin = document.getElementById('secretPinInput').value.trim();
-            if (inputPin.length !== 4 || isNaN(inputPin)) {
-                alert("कृपया 4 अंकों का सही संख्यात्मक पिन डालें।");
-                return;
-            }
-            if (!userSavedPin) {
-                database.ref('users/' + myGupchupID + '/premium/pin').set(inputPin);
-                userSavedPin = inputPin;
-                executeHideAction(true);
-                alert("🔒 आपका गुप्त पिन सफलतापूर्वक सेट हो गया है और चैट छुपा दी गई है!");
-                closePremiumModal();
-            } else {
-                if (inputPin === userSavedPin) {
-                    executeHideAction(!chatHiddenStatus);
-                    closePremiumModal();
-                } else {
-                    alert("❌ गलत गुप्त पिन! दोबारा कोशिश करें।");
-                }
-            }
-            document.getElementById('secretPinInput').value = "";
         }
 
         function executeHideAction(shouldHide) {
@@ -420,7 +317,6 @@
             }
         }
 
-        function closePremiumModal() { document.getElementById('premiumMasterModal').style.display = 'none'; }
         function goBack() { window.location.href = "inbox.html"; }
 
         function toggleVanishMode() {
@@ -470,7 +366,7 @@
         }
 
         function getChatRoomId(id1, id2) { return id1 < id2 ? id1 + "_" + id2 : id2 + "_" + id1; }
-        function checkEnterKey(e) { if (e.key === 'Enter') { sendTextMessage(); } }
+        function checkEnterKey(e) { }
 
         function sendTextMessage() {
             const input = document.getElementById('messageInputField');
@@ -482,6 +378,7 @@
             if (activeReplyId) { messageData.replyTo = activeReplyText; }
             msgRef.set(messageData);
             input.value = "";
+            input.style.height = '40px'; 
             document.getElementById('micBtn').innerText = "🎤";
             cancelReply();
         }
@@ -509,8 +406,10 @@
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = false; recognition.lang = 'hi-IN';
                 recognition.onresult = function(event) {
-                    document.getElementById('messageInputField').value += event.results[0][0].transcript;
+                    const inputField = document.getElementById('messageInputField');
+                    inputField.value += event.results[0][0].transcript;
                     document.getElementById('micBtn').innerText = "➔";
+                    OnInput.call(inputField); 
                     toggleMicStyle(false);
                 };
                 recognition.onerror = function() { toggleMicStyle(false); };
