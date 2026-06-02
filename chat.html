@@ -11,7 +11,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        /* 13. प्राइवेसी वॉटरमार्क बैकग्राउंड */
+        /* 13. प्राइवेसी वॉटरमार्क बैकग्राउंड - हमेशा तैरता हुआ (Fixed Center) */
         body { 
             background-color: #111b21; 
             color: #e9edef; 
@@ -23,50 +23,67 @@
         }
         body::before {
             content: var(--watermark-text, "GUPCHUP CHAT");
-            position: absolute;
+            position: fixed; /* इसे हमेशा के लिए पूरी स्क्रीन पर स्थिर कर दिया है */
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
             font-size: 8vw;
-            color: rgba(255, 255, 255, 0.04); /* वॉटरमार्क को थोड़ा साफ किया गया है ताकि स्क्रीनशॉट में दिखे */
+            color: rgba(255, 255, 255, 0.04); 
             font-weight: bold;
             pointer-events: none;
-            z-index: 1;
+            z-index: 9999; /* सबसे ऊपर लेयर ताकि पॉपअप और चैट सबके ऊपर तैरता रहे */
             white-space: nowrap;
             text-align: center;
             width: 100%;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        /* 1. हेडर डिज़ाइन */
+        /* 1. हेडर डिज़ाइन - ऊपर की फिक्स पट्टी */
         .chat-header { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             padding: 10px 15px; 
             background: #202c33; 
-            z-index: 10;
+            z-index: 100;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
         }
-        .header-left { display: flex; align-items: center; gap: 10px; }
-        .back-btn { background: none; border: none; color: #00a884; font-size: 20px; cursor: pointer; font-weight: bold; }
-        .partner-avatar { width: 40px; height: 40px; background: #00a884; color: #111b21; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; }
-        .partner-status-info { display: flex; flex-direction: column; }
-        .partner-name { font-size: 16px; font-weight: 600; }
-        /* 8. रीड रिसीट्स / 11. घोस्ट मोड (ऑनलाइन स्टेटस) */
-        .online-status { font-size: 12px; color: #8696a0; display: flex; align-items: center; gap: 4px; }
-        .online-dot { width: 8px; height: 8px; background: #00a884; border-radius: 50%; display: inline-block; }
+        .header-left { display: flex; align-items: center; padding-left: 5px; }
         
-        .header-actions { display: flex; align-items: center; gap: 15px; }
+        /* 8. रीड रिसीट्स / 11. घोस्ट मोड (ऑनलाइन स्टेटस - थोड़ा स्पेस छोड़कर लेफ्ट में) */
+        .online-status { font-size: 16px; color: #00a884; display: flex; align-items: center; gap: 6px; font-weight: bold; }
+        .online-dot { width: 10px; height: 10px; background: #00a884; border-radius: 50%; display: inline-block; }
         
-        /* 👑 नया प्रीमियम लॉक बटन स्टाइल */
-        .btn-premium-lock { background: none; border: none; font-size: 20px; cursor: pointer; transition: transform 0.2s; }
-        .btn-premium-lock:hover { transform: scale(1.1); }
+        /* राइट साइड बटनों के बीच पूरा स्पेस */
+        .header-actions { display: flex; align-items: center; gap: 20px; }
+        
+        /* 👑 नया प्रीमियम लॉक बटन स्टाइल - सुंदर गोल आइकॉन नीचे प्राइम टेक्स्ट के साथ */
+        .premium-lock-container { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+        .btn-premium-lock { 
+            background: #2a3942; 
+            border: none; 
+            font-size: 16px; 
+            width: 38px; 
+            height: 38px; 
+            border-radius: 50%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .premium-lock-container:hover .btn-premium-lock { transform: scale(1.1); }
+        .premium-text-label { font-size: 10px; color: #ffb703; font-weight: bold; }
 
         /* 7. मैजिक वैनिश मोड टॉगल / एंटीक बटन */
-        .btn-vanish-toggle { background: none; border: none; font-size: 20px; cursor: pointer; filter: grayscale(1); transition: filter 0.2s; }
+        .btn-vanish-toggle { background: none; border: none; font-size: 22px; cursor: pointer; filter: grayscale(1); transition: filter 0.2s; }
         .btn-vanish-toggle.active { filter: grayscale(0); transform: scale(1.1); }
+        
         /* 10. क्विक एग्जिट (Emergency Exit) बटन */
-        .btn-exit { background: #ea0038; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-exit { background: #ea0038; color: white; border: none; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
         /* मुख्य चैट एरिया */
         .chat-messages-area { 
@@ -151,22 +168,40 @@
         .reply-preview-text { font-size: 13px; color: #8696a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
         .reply-close { color: #ea0038; cursor: pointer; font-weight: bold; }
 
-        /* नीचे का इनपुट एरिया */
+        /* 📱 नीचे का नया इनपुट एरिया लेआउट (स्मार्ट पट्टी) */
         .chat-input-area { 
             background: #202c33; 
             padding: 10px 12px; 
             display: flex; 
             align-items: center; 
             gap: 10px; 
-            z-index: 10;
+            z-index: 100;
         }
-        /* 5. डायरेक्ट गैलरी एक्सेस आइकन */
-        .btn-attachment { background: none; border: none; color: #8696a0; font-size: 22px; cursor: pointer; }
-        .btn-attachment:hover { color: #00a884; }
-        .input-box-wrapper { flex: 1; position: relative; }
-        .chat-input { width: 100%; padding: 10px 15px; background: #2a3942; border: none; border-radius: 20px; color: white; font-size: 15px; outline: none; }
         
-        /* 4. गोल माइक बटन (Voice to Text) - छोटा और गोल व्हाट्सएप स्टाइल */
+        /* इनपुट बॉक्सwrapper (स्टीकर + मैसेज + गैलरी) */
+        .input-box-wrapper { 
+            flex: 1; 
+            background: #2a3942;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            padding: 2px 12px;
+            gap: 8px;
+            position: relative;
+        }
+        
+        /* बाएँ तरफ का स्टीकर बटन */
+        .btn-sticker { background: none; border: none; color: #8696a0; font-size: 20px; cursor: pointer; }
+        .btn-sticker:hover { color: #00a884; }
+        
+        /* बीच का मुख्य टेक्स्ट इनपुट */
+        .chat-input { flex: 1; background: none; border: none; color: white; font-size: 15px; padding: 8px 0; outline: none; }
+        
+        /* 5. डायरेक्ट गैलरी एक्सेस आइकन - बॉक्स के अंदर राइट साइड */
+        .btn-attachment { background: none; border: none; color: #8696a0; font-size: 20px; cursor: pointer; }
+        .btn-attachment:hover { color: #00a884; }
+        
+        /* 4. गोल माइक बटन (Voice to Text) - पट्टी के ठीक बाहर व्हाट्सएप स्टाइल */
         .btn-mic { width: 40px; height: 40px; background: #00a884; border: none; border-radius: 50%; color: #111b21; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
         .btn-mic.recording { background: #ea0038; color: white; animation: pulse 1s infinite; }
 
@@ -181,27 +216,25 @@
 </head>
 <body>
 
-    <!-- 1. टॉप हेडर एरिया -->
+    <!-- 1. टॉप हेडर एरिया (फिक्स पट्टी) -->
     <div class="chat-header">
         <div class="header-left">
-            <button class="back-btn" onclick="goBack()">Selection_🔍</button>
-            <div id="partnerAvatar" class="partner-avatar">?</div>
-            <div class="partner-status-info">
-                <div id="partnerNameDisplay" class="partner-name">गुप्त यूजर</div>
-                <div id="statusDisplay" class="online-status"><span class="online-dot"></span>ऑनलाइन</div>
-            </div>
+            <div id="statusDisplay" class="online-status"><span class="online-dot"></span>ऑनलाइन</div>
         </div>
         <div class="header-actions">
-            <!-- 👑 प्रीमियम लॉक बटन (एंट्री पॉइंट) -->
-            <button class="btn-premium-lock" onclick="handlePremiumButtonClick()" title="सीक्रेट हाइडर बॉक्स">🔒</button>
+            <!-- 👑 गोल प्रीमियम लॉक बटन (एंट्री पॉइंट) -->
+            <div class="premium-lock-container" onclick="handlePremiumButtonClick()" title="सीक्रेट हाइडर बॉक्स">
+                <button class="btn-premium-lock">🔒</button>
+                <span class="premium-text-label">प्राइम</span>
+            </div>
             <!-- 7. जादुई वैनिश मोड (सभी के लिए चालू) -->
             <button id="vanishToggleBtn" class="btn-vanish-toggle" onclick="toggleVanishMode()" title="10 सेकंड वैनिश मोड">🪄</button>
-            <!-- 10. क्विक इमरजेंसी एग्जिट बटन -->
+            <!-- 10. क्विक इमरजेंसी एग्जिट बटन (दबाते ही पूरा हट जाएगा) -->
             <button class="btn-exit" onclick="emergencyExit()">Emergency Exit 🏃‍♂️</button>
         </div>
     </div>
 
-    <!-- मुख्य चैट मैसेजेस एरिया -->
+    <!-- मुख्य चैट मैसेजेस送 एरिया -->
     <div id="chatMessagesArea" class="chat-messages-area"></div>
 
     <!-- 3. स्वाइप/रिप्लाई प्रिव्यू बार -->
@@ -210,21 +243,25 @@
         <div class="reply-close" onclick="cancelReply()">❌</div>
     </div>
 
-    <!-- नीचे का इनपुट कंट्रोल्स -->
+    <!-- नीचे का इनपुट कंट्रोल्स (स्मार्ट लेआउट) -->
     <div class="chat-input-area">
-        <!-- 5. गैलरी एक्सेस -->
-        <button class="btn-attachment" onclick="triggerGallery()">📎</button>
-        <input type="file" id="galleryInput" accept="image/*" style="display: none;" onchange="sendImageMessage(this)">
-        
         <div class="input-box-wrapper">
-            <input type="text" id="messageInputField" class="chat-input" placeholder="सुरक्षित संदेश टाइप करें..." onkeypress="checkEnterKey(event)">
+            <!-- लेफ्ट साइड में स्टीकर बटन -->
+            <button class="btn-sticker" onclick="triggerStickerAction()">😊</button>
+            
+            <!-- बीच में मैसेज इनपुट बॉक्स (कीबोर्ड एरो/स्पेस के लिए enterkeyhint सेंड) -->
+            <input type="text" id="messageInputField" class="chat-input" placeholder="सुरक्षित संदेश टाइप करें..." onkeypress="checkEnterKey(event)" enterkeyhint="send">
+            
+            <!-- 5. गैलरी एक्सेस - बॉक्स के अंदर राइट साइड -->
+            <button class="btn-attachment" onclick="triggerGallery()">📎</button>
+            <input type="file" id="galleryInput" accept="image/*" style="display: none;" onchange="sendImageMessage(this)">
         </div>
         
-        <!-- 4. गोल माइक बटन -->
-        <button id="micBtn" class="btn-mic" onclick="toggleVoiceTyping()">🎤</button>
+        <!-- 4. गोल माइक बटन / स्मार्ट सेंड बटन (पट्टी के बाहर) -->
+        <button id="micBtn" class="btn-mic" onclick="handleMicOrSendAction()">🎤</button>
     </div>
 
-    <!-- 👑 मास्टर प्रीमियम पॉप-अप बॉक्स (फ्री और प्रीमियम दोनों के लिए डायनामिक काम करेगा) -->
+    <!-- 👑 मास्टर प्रीमियम पॉप-अप बॉक्स -->
     <div id="premiumMasterModal" class="premium-popup-box">
         <!-- बॉक्स 1: फ्री यूजर के लिए नियम + पेमेंट + क्यूआर कोड का ढांचा -->
         <div id="freeUserView" class="premium-content-card" style="display: none;">
@@ -306,28 +343,65 @@
 
         // पेज लोड सेटिंग
         window.onload = function() {
-            // 13. वॉटरमार्क में यूजर की आईडी सेट करना (सुरक्षा विकल्प)
+            // 13. वॉटरमार्क में यूजर की आईडी सेट करना - जो हमेशा ऊपर तैरती रहेगी
             document.documentElement.style.setProperty('--watermark-text', `'${myGupchupID}'`);
             
-            document.getElementById('partnerNameDisplay').innerText = partnerGupchupID;
-            document.getElementById('partnerAvatar').innerText = partnerGupchupID.charAt(0).toUpperCase();
-
             // रीयल-टाइम में यूजर का प्रीमियम टाइम स्टेटस चेक करें
             checkPremiumTimeStatus();
 
             // 1. रीयल-टाइम मैसेजेस सुनना शुरू करें
             loadRealtimeMessages();
             setupVoiceToText();
+            setupInputSmartSwitch();
         };
+
+        // 📱 टाइप करते ही माइक गायब होकर नीचे पुश करने वाला 'तीर-बाण' सेंड बटन बनेगा
+        function setupInputSmartSwitch() {
+            const inputField = document.getElementById('messageInputField');
+            const micBtn = document.getElementById('micBtn');
+            
+            inputField.addEventListener('input', function() {
+                if (this.value.trim().length > 0) {
+                    micBtn.innerText = "➔"; // सेंड करने का तीर-बाण निशान
+                    micBtn.style.background = "#00a884";
+                } else {
+                    micBtn.innerText = "🎤"; // खाली होने पर वापस प्रोफेशनल माइक
+                }
+            });
+        }
+
+        // बाहर वाले बटन के क्लिक को हैंडल करने का डायनामिक फंक्शन
+        function handleMicOrSendAction() {
+            const inputField = document.getElementById('messageInputField');
+            if (inputField.value.trim().length > 0) {
+                sendTextMessage();
+            } else {
+                toggleVoiceTyping(); // खाली बॉक्स पर माइक का काम (वॉइस टाइपिंग) करेगा
+            }
+        }
+
+        // 😊 क्विक लव सिंबल स्टीकर एक्शन
+        function triggerStickerAction() {
+            const inputField = document.getElementById('messageInputField');
+            inputField.value += "❤️";
+            document.getElementById('micBtn').innerText = "➔"; // तुरंत सेंड बटन सक्रिय करें
+            inputField.focus();
+        }
+
+        // 🛑 इमरजेंसी एग्जिट बटन (दबाते ही पूरा बंद होकर मोबाइल मुख्य स्क्रीन आ जाएगी)
+        function emergencyExit() {
+            window.close(); // विंडो बंद करने का प्रयास
+            setTimeout(() => {
+                window.location.replace("about:blank"); // सुरक्षा के लिए ब्लैंक पेज रिप्लेस
+            }, 50);
+        }
 
         // 🕒 ऑटोमैटिक 30 दिन एक्सपायरी और एक्टिवेशन स्टेटस चेक लॉजिक
         function checkPremiumTimeStatus() {
-            // फायरबेस से यूजर का डेटा चेक करना
             database.ref('users/' + myGupchupID + '/premium').on('value', function(snapshot) {
                 const data = snapshot.val();
                 if (data && data.status === "active") {
                     const currentTime = Date.now();
-                    // यदि वर्तमान समय एक्सपायरी समय से ज्यादा हो चुका है तो ऑटो-ऑफ करें
                     if (data.expiryTime && currentTime > data.expiryTime) {
                         database.ref('users/' + myGupchupID + '/premium').set({ status: "expired" });
                         isPremiumActive = false;
@@ -346,7 +420,6 @@
             document.getElementById('premiumMasterModal').style.display = 'flex';
             
             if (isPremiumActive) {
-                // अगर प्रीमियम ऑन है तो सीधा पिन डालने वाला लॉकर दिखेगा
                 document.getElementById('freeUserView').style.display = 'none';
                 document.getElementById('premiumUserView').style.display = 'flex';
                 
@@ -361,7 +434,6 @@
                     submitBtn.innerText = chatHiddenStatus ? "चैट वापस दिखाएं" : "चैट छुपाएं";
                 }
             } else {
-                // अगर प्रीमियम बंद या एक्सपायर हो गया है तो केवल पेमेंट + QR कोड पेज दिखेगा
                 document.getElementById('premiumUserView').style.display = 'none';
                 document.getElementById('freeUserView').style.display = 'flex';
             }
@@ -376,14 +448,12 @@
             }
 
             if (!userSavedPin) {
-                // पहली बार पिन सेट करना
                 database.ref('users/' + myGupchupID + '/premium/pin').set(inputPin);
                 userSavedPin = inputPin;
                 executeHideAction(true);
                 alert("🔒 आपका गुप्त पिन सफलतापूर्वक सेट हो गया है और चैट छुपा दी गई है!");
                 closePremiumModal();
             } else {
-                // पुराना पिन मैच करना
                 if (inputPin === userSavedPin) {
                     executeHideAction(!chatHiddenStatus);
                     closePremiumModal();
@@ -394,15 +464,14 @@
             document.getElementById('secretPinInput').value = "";
         }
 
-        // स्क्रीन से चैट हाइड या शो करने का विजुअल एक्शन
         function executeHideAction(shouldHide) {
             chatHiddenStatus = shouldHide;
             const messagesArea = document.getElementById('chatMessagesArea');
             if (chatHiddenStatus) {
-                messagesArea.style.opacity = "0"; // पूरी चैट छुपा दी (ब्लैंक स्क्रीन)
+                messagesArea.style.opacity = "0"; 
                 messagesArea.style.pointerEvents = "none";
             } else {
-                messagesArea.style.opacity = "1"; // चैट वापस दिखा दी
+                messagesArea.style.opacity = "1"; 
                 messagesArea.style.pointerEvents = "auto";
             }
         }
@@ -413,11 +482,6 @@
 
         function goBack() {
             window.location.href = "inbox.html";
-        }
-
-        // 10. क्विक इमरजेंसी एग्जिट बटन फंक्शन
-        function emergencyExit() {
-            window.location.href = "https://www.google.com";
         }
 
         // 7. जादुई वैनिश मोड ऑन/ऑफ टॉगल
@@ -446,7 +510,6 @@
                     const msgData = childSnapshot.val();
                     const msgId = childSnapshot.key;
 
-                    // 6. 7-दिन पुरानी चैट को बैकएंड/फ्रंटएंड से स्वतः साफ़ करना
                     if (msgData.timestamp < sevenDaysAgo) {
                         database.ref('chats/' + chatRoomId + '/' + msgId).remove();
                         return;
@@ -454,7 +517,6 @@
 
                     displayMessageBubble(msgId, msgData);
 
-                    // 7. वैनिश मोड एक्टिव होने पर 10 सेकंड का काउंटर शुरू करना
                     if (msgData.vanish === true && msgData.sender !== myGupchupID) {
                         setTimeout(() => {
                             database.ref('chats/' + chatRoomId + '/' + msgId).remove();
@@ -467,7 +529,6 @@
             });
         }
 
-        // मैसेज बबल स्क्रीन पर रेंडर करना
         function displayMessageBubble(msgId, data) {
             const container = document.getElementById('chatMessagesArea');
             const row = document.createElement('div');
@@ -475,13 +536,11 @@
 
             let innerHTML = `<div class="message-bubble" id="msg_${msgId}" oncontextmenu="openDeleteMenu(event, '${msgId}')" onclick="triggerSwipeReply('${msgId}', '${data.text}')">`;
             
-            // 3. अगर रिप्लाई मैसेज है तो ऊपर पैरेंट मैसेज दिखाना
             if (data.replyTo) {
                 innerHTML += `<div class="reply-source-inside">↩️ ${data.replyTo}</div>`;
             }
 
             if (data.type === "image") {
-                // 12. एंटी-सेव इमेज स्टाइल लागू करना
                 innerHTML += `<img src="${data.text}" class="chat-image" oncontextmenu="return false;">`;
             } else {
                 innerHTML += `<div>${data.text}</div>`;
@@ -492,12 +551,10 @@
             container.appendChild(row);
         }
 
-        // दो यूजर के बीच एक यूनिक चैट रूम आईडी बनाना
         function getChatRoomId(id1, id2) {
             return id1 < id2 ? id1 + "_" + id2 : id2 + "_" + id1;
         }
 
-        // टेक्स्ट मैसेज भेजने का फंक्शन
         function checkEnterKey(e) {
             if (e.key === 'Enter') { sendTextMessage(); }
         }
@@ -524,10 +581,11 @@
 
             msgRef.set(messageData);
             input.value = "";
+            document.getElementById('micBtn').innerText = "🎤"; // वापस डिफ़ॉल्ट माइक सेट करें
+            document.getElementById('micBtn').style.background = "#00a884";
             cancelReply();
         }
 
-        // 5. गैलरी से सीधे फोटो सिलेक्ट करना और भेजना
         function triggerGallery() {
             document.getElementById('galleryInput').click();
         }
@@ -541,7 +599,7 @@
 
                     msgRef.set({
                         sender: myGupchupID,
-                        text: e.target.result, // बेस64 फॉर्मेट इमेज
+                        text: e.target.result, 
                         timestamp: Date.now(),
                         type: "image",
                         vanish: isVanishModeOn
@@ -551,7 +609,6 @@
             }
         }
 
-        // 2. होल्ड टू डिलीट पॉप-अप को चालू करना (लॉन्ग प्रेस/राइट क्लिक)
         function openDeleteMenu(e, msgId) {
             e.preventDefault();
             selectedMessageId = msgId;
@@ -570,7 +627,6 @@
             }
         }
 
-        // 3. स्वाइप टू रिप्लाई को ट्रिगर करना (क्लिक/टैप एक्शन)
         function triggerSwipeReply(msgId, text) {
             activeReplyId = msgId;
             activeReplyText = text.length > 30 ? text.substring(0, 30) + "..." : text;
@@ -584,18 +640,18 @@
             document.getElementById('replyPreviewBar').style.display = 'none';
         }
 
-        // 4. गोल माइक बटन (Voice to Text) - हिंदी/इंग्लिश ऑटोमैटिक टाइपिंग
         function setupVoiceToText() {
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
                 recognition.continuous = false;
                 recognition.interimResults = false;
-                recognition.lang = 'hi-IN'; // हिंदी प्राथमिक, अंग्रेजी भी सपोर्टेड
+                recognition.lang = 'hi-IN';
 
                 recognition.onresult = function(event) {
                     const resultText = event.results[0][0].transcript;
                     document.getElementById('messageInputField').value += resultText;
+                    document.getElementById('micBtn').innerText = "➔"; // वॉइस टाइपिंग के बाद तुरंत सेंड एरो एक्टिव करें
                     toggleMicStyle(false);
                 };
 
