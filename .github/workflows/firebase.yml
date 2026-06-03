@@ -12,5 +12,5 @@ jobs:
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_TOKEN }}
-          projectId: gupchup-chat-42284
+          projectId: 'gupchup-chat-42284'
 
