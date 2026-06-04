@@ -183,6 +183,9 @@
                 return;
             }
             alert(partnerID + " के साथ नया चैट रूम कनेक्ट किया जा रहा है...");
+            
+            // नया जोड़ा गया कोड: यह यूज़र को सीधे chat.html पर भेज देगा
+            window.location.href = "chat.html?partner=" + encodeURIComponent(partnerID);
         }
 
         // Feature 5: डायरेक्ट इनवाइट लिंक जनरेटर
