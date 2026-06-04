@@ -237,7 +237,7 @@
         const myUID = localStorage.getItem('gupchup_uid');
         
         const urlParams = new URLSearchParams(window.location.search);
-        let partnerGupchupID = urlParams.get('chatWith') || "Secret_Friend";
+        let partnerGupchupID = urlParams.get('partner') || "Secret_Friend";
 
         let selectedMessageId = null;
         let activeReplyId = null;
