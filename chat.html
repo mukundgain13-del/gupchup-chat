@@ -6,33 +6,173 @@
     <title>गुपचुप चैट - चैट रूम</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <!-- ⚡ नया: फोटो सुपर-फास्ट भेजने के लिए स्टोरेज SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: #111b21; color: #e9edef; display: flex; flex-direction: column; height: 100vh; overflow: hidden; position: relative; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        .floating-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 8vw; color: rgba(255, 255, 255, 0.04); font-weight: bold; pointer-events: none; z-index: 99999; white-space: nowrap; user-select: none; }
+        body { 
+            background-color: #111b21; 
+            color: #e9edef; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
 
-        .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #202c33; z-index: 100; height: 60px; }
-        .online-status { font-size: 16px; color: #00a884; font-weight: bold; }
-        .header-actions { display: flex; align-items: center; gap: 15px; }
-        .btn-exit { background: #ea0038; color: white; border: none; padding: 8px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+        /* 👑 हमेशा सबसे ऊपर तैरने वाला प्राइवेसी वॉटरमार्क (लंबे चैट टेक्स्ट के ऊपर दिखेगा) */
+        .floating-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 8vw;
+            color: rgba(255, 255, 255, 0.04); 
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 99999; /* सबसे उच्चतम लेयर ताकि संदेश इसके नीचे से गुजरें और यह ऊपर तैरता रहे */
+            white-space: nowrap;
+            text-align: center;
+            width: 100%;
+            user-select: none;
+            -webkit-user-select: none;
+        }
 
-        /* ⚡ फिक्स: टाइपिंग एरिया के नीचे जगह बढ़ाई */
-        .chat-messages-area { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 70px; scroll-behavior: auto; }
+        /* 1. हेडर डिज़ाइन - ऊपर की फिक्स पट्टी */
+        .chat-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 15px; 
+            background: #202c33; 
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            height: 60px;
+            flex-shrink: 0;
+        }
+        .header-left { display: flex; align-items: center; padding-left: 5px; }
+        
+        /* 8. रीड रिसीट्स / 11. घोस्ट मोड (ऑनलाइन स्टेटस) */
+        .online-status { font-size: 16px; color: #00a884; display: flex; align-items: center; gap: 6px; font-weight: bold; }
+        .online-dot { width: 10px; height: 10px; background: #00a884; border-radius: 50%; display: inline-block; }
+        
+        .header-actions { display: flex; align-items: center; gap: 20px; }
+        
+        /* 👑 सुधरा हुआ एक्शन बटन (बिना ताले और लेबल के) */
+        .btn-direct-action { 
+            background: #2a3942; 
+            border: none; 
+            font-size: 16px; 
+            width: 38px; 
+            height: 38px; 
+            border-radius: 50%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .btn-direct-action:hover { transform: scale(1.1); }
 
+        /* 7. मैजिक वैनिश मोड टॉगल */
+        .btn-vanish-toggle { background: none; border: none; font-size: 22px; cursor: pointer; filter: grayscale(1); transition: filter 0.2s; }
+        .btn-vanish-toggle.active { filter: grayscale(0); transform: scale(1.1); }
+        
+        /* 10. क्विक एग्जिट (Emergency Exit) बटन */
+        .btn-exit { background: #ea0038; color: white; border: none; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+        /* मुख्य चैट एरिया - नीचे मार्जिन देकर स्क्रीन के अंदर घुसने से बचाया */
+        .chat-messages-area { 
+            flex: 1; 
+            padding: 15px; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            z-index: 5;
+            margin-bottom: 75px; /* इसके कारण डैशबोर्डและ चैट पट्टी एकदम सही एड्रेस में बीच में रहेंगे */
+        }
+
+        /* 1. रीयल-टाइम मैसेज बबल्स */
         .message-row { display: flex; width: 100%; }
         .message-row.sent { justify-content: flex-end; }
         .message-row.received { justify-content: flex-start; }
-        .message-bubble { max-width: 80%; padding: 8px 12px; border-radius: 8px; font-size: 15px; background: #202c33; cursor: pointer; }
-        .sent .message-bubble { background: #005c4b; }
-        .chat-image { max-width: 100%; border-radius: 6px; }
+        
+        .message-bubble { 
+            max-width: 75%; padding: 8px 12px; border-radius: 8px; font-size: 15px; position: relative; word-wrap: break-word; cursor: pointer; user-select: none; -webkit-user-select: none;
+        }
+        .sent .message-bubble { background: #005c4b; color: #e9edef; border-top-right-radius: 0; }
+        .received .message-bubble { background: #202c33; color: #e9edef; border-top-left-radius: 0; }
+        .reply-source-inside { background: rgba(0,0,0,0.2); padding: 4px 8px; border-left: 3px solid #00a884; border-radius: 4px; margin-bottom: 4px; font-size: 12px; color: #8696a0; }
+        .message-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 4px; display: block; }
+        .chat-image { max-width: 100%; border-radius: 6px; margin-top: 5px; pointer-events: none; -webkit-touch-callout: none; }
 
-        .chat-input-area { background: #202c33; padding: 10px; display: flex; align-items: center; gap: 10px; position: fixed; bottom: 0; width: 100%; z-index: 1000; }
-        .chat-input { flex: 1; background: #2a3942; border: none; color: white; padding: 10px; border-radius: 20px; outline: none; }
-        .btn-mic { width: 40px; height: 40px; background: #00a884; border-radius: 50%; color: #111b21; border: none; cursor: pointer; }
+        /* 3. लाइव रिप्लाई बार */
+        .reply-preview-bar { background: #1f2c34; padding: 8px 15px; display: none; justify-content: space-between; align-items: center; border-left: 4px solid #00a884; z-index: 1005; position: fixed; bottom: 70px; left: 4%; width: 92%; border-radius: 8px; }
+        .reply-preview-text { font-size: 13px; color: #8696a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
+        .reply-close { color: #ea0038; cursor: pointer; font-weight: bold; }
+
+        /* 📱 सुधरा हुआ इनपुट एरिया - छोटा करके पास में लाया गया (Capsule Style) */
+        .chat-input-area { 
+            background: #202c33; 
+            padding: 6px 10px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            z-index: 1010;
+            position: fixed;
+            bottom: 8px; /* स्क्रीन के नीचे से थोड़ा ऊपर ताकि कीबोर्ड से न दबे */
+            left: 3%; /* दोनों तरफ से छोटा करके बीच में समेटा */
+            width: 94%; 
+            height: 54px;
+            border-radius: 30px; /* कैप्सूल लुक */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+        
+        .input-box-wrapper { 
+            flex: 1; 
+            background: #2a3942;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            padding: 2px 12px;
+            gap: 8px;
+            position: relative;
+            height: 100%;
+        }
+        
+        .btn-sticker { background: none; border: none; color: #8696a0; font-size: 20px; cursor: pointer; }
+        
+        /* ✍️ मुख्य संदेश इनपुट - तीर (Arrow) बटन लाने के लिए इसे textarea में बदला और रीसाइज़ बंद किया */
+        .chat-input { 
+            flex: 1; 
+            background: none; 
+            border: none; 
+            color: white; 
+            font-size: 15px; 
+            padding: 8px 0; 
+            outline: none; 
+            resize: none; 
+            height: 40px; 
+            max-height: 100px; 
+            line-height: 1.4; 
+        }
+        
+        .btn-attachment { background: none; border: none; color: #8696a0; font-size: 20px; cursor: pointer; }
+        .btn-mic { width: 38px; height: 38px; background: #00a884; border: none; border-radius: 50%; color: #111b21; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+        .btn-mic.recording { background: #ea0038; color: white; animation: pulse 1s infinite; }
+
+        /* 2. होल्ड टू डिलीट पॉप-अप */
+        .delete-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11,20,26,0.8); display: none; justify-content: center; align-items: center; z-index: 30000; }
+        .delete-box { background: #222e35; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center; }
+        .delete-btn { width: 100%; background: #ea0038; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 15px; }
+        .cancel-btn { width: 100%; background: #2a3942; color: #e9edef; border: none; padding: 10px; border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 8px; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -40,19 +180,43 @@
     <div id="floatingWatermarkDisplay" class="floating-watermark">GUPCHUP</div>
 
     <div class="chat-header">
-        <div class="online-status">● ऑनलाइन</div>
+        <div class="header-left">
+            <div id="statusDisplay" class="online-status"><span class="online-dot"></span>ऑनलाइन</div>
+        </div>
         <div class="header-actions">
-            <button class="btn-exit" onclick="emergencyExit()">Exit 🏃‍♂️</button>
+            <button class="btn-direct-action" onclick="handleDirectActionClick()">⚙️</button>
+            <button id="vanishToggleBtn" class="btn-vanish-toggle" onclick="toggleVanishMode()" title="10 सेकंड वैनिश मोड">🪄</button>
+            <button class="btn-exit" onclick="emergencyExit()">Emergency Exit 🏃‍♂️</button>
         </div>
     </div>
 
     <div id="chatMessagesArea" class="chat-messages-area"></div>
 
+    <div id="replyPreviewBar" class="reply-preview-bar">
+        <div id="replyPreviewText" class="reply-preview-text">रिप्लाई का संदेश यहाँ दिखेगा...</div>
+        <div class="reply-close" onclick="cancelReply()">❌</div>
+    </div>
+
     <div class="chat-input-area">
-        <textarea id="messageInputField" class="chat-input" placeholder="टाइप करें..."></textarea>
-        <button class="btn-attachment" onclick="document.getElementById('galleryInput').click()">📎</button>
-        <input type="file" id="galleryInput" accept="image/*" style="display: none;" onchange="sendImageMessage(this)">
-        <button id="micBtn" class="btn-mic" onclick="sendTextMessage()">➤</button>
+        <div class="input-box-wrapper">
+            <button class="btn-sticker" onclick="triggerStickerAction()">😊</button>
+            
+            <textarea id="messageInputField" class="chat-input" placeholder="सुरक्षित संदेश टाइप करें..." onkeypress="checkEnterKey(event)"></textarea>
+            
+            <button class="btn-attachment" onclick="triggerGallery()">📎</button>
+            <input type="file" id="galleryInput" accept="image/*" style="display: none;" onchange="sendImageMessage(this)">
+        </div>
+        
+        <button id="micBtn" class="btn-mic" onclick="handleMicOrSendAction()">🎤</button>
+    </div>
+
+    <div id="deleteModal" class="delete-modal">
+        <div class="delete-box">
+            <h3 style="font-size: 16px;">मैसेज डिलीट करें?</h3>
+            <p style="font-size: 13px; color: #8696a0; margin-top: 5px;">यह मैसेज दोनों तरफ (Everyone) से तुरंत हमेशा के लिए मिट जाएगा।</p>
+            <button class="delete-btn" onclick="confirmDeleteMessage()">Delete for Everyone 🗑️</button>
+            <button class="cancel-btn" onclick="closeDeleteModal()">रद्द करें</button>
+        </div>
     </div>
 
     <script>
@@ -63,72 +227,237 @@
             storageBucket: "gupchup-chat-42284.firebasestorage.app",
             messagingSenderId: "466844600607",
             appId: "1:466844600607:web:f09db730e62b7c555b482a",
+            measurementId: "G-041PKMSPM7",
             databaseURL: "https://gupchup-chat-42284-default-rtdb.firebaseio.com/"
         };
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const storage = firebase.storage(); // स्टोरेज चालू किया
+        const storage = firebase.storage(); // ⚡ नया: स्टोरेज इनिशियलाइज़ किया
 
         const myGupchupID = localStorage.getItem('gupchup_id') || "User";
+        const myUID = localStorage.getItem('gupchup_uid');
+        
         const urlParams = new URLSearchParams(window.location.search);
-        let partnerGupchupID = urlParams.get('partner') || "Friend";
+        let partnerGupchupID = urlParams.get('partner') || "Secret_Friend";
 
-        // ⚡ स्क्रॉल को हरदम नीचे रखने का पक्का कोड
-        function scrollToBottom() {
+        let selectedMessageId = null;
+        let activeReplyId = null;
+        let activeReplyText = "";
+        let isVanishModeOn = false;
+        let recognition = null;
+        let chatHiddenStatus = false;
+
+        // ⚡ स्क्रॉल को हमेशा नीचे धकेलने वाला फंक्शन
+        function snapToBottom() {
             const container = document.getElementById('chatMessagesArea');
-            container.scrollTop = container.scrollHeight;
+            container.scrollTop = container.scrollHeight + 1000;
         }
 
-        // कीबोर्ड खुलने पर स्क्रीन एडजस्ट करने का कोड
-        window.addEventListener('resize', scrollToBottom);
+        window.onload = function() {
+            document.getElementById('floatingWatermarkDisplay').innerText = myGupchupID;
+            
+            loadRealtimeMessages();
+            setupVoiceToText();
+            setupInputSmartSwitch();
+
+            // ⚡ कीबोर्ड खुलने पर स्क्रीन एडजस्ट करेगा
+            window.addEventListener('resize', snapToBottom);
+            document.getElementById('messageInputField').addEventListener('focus', function() {
+                setTimeout(snapToBottom, 300);
+            });
+        };
+
+        function setupInputSmartSwitch() {
+            const inputField = document.getElementById('messageInputField');
+            const micBtn = document.getElementById('micBtn');
+            
+            inputField.addEventListener('input', OnInput, false); 
+            
+            inputField.addEventListener('input', function() {
+                if (this.value.trim().length > 0) {
+                    micBtn.innerText = "➔"; 
+                    micBtn.style.background = "#00a884";
+                } else {
+                    micBtn.innerText = "🎤"; 
+                }
+            });
+        }
+
+        function OnInput() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if(this.value === "") this.style.height = '40px';
+        }
+
+        // 🚀 नया बटन फंक्शन: बिना ताले/पिन के डायरेक्ट एक्शन करने के लिए
+        function handleDirectActionClick() {
+            executeHideAction(!chatHiddenStatus);
+        }
+
+        function handleMicOrSendAction() {
+            const inputField = document.getElementById('messageInputField');
+            if (inputField.value.trim().length > 0) {
+                sendTextMessage();
+            } else {
+                toggleVoiceTyping(); 
+            }
+        }
+
+        function triggerStickerAction() {
+            const inputField = document.getElementById('messageInputField');
+            inputField.value += "❤️";
+            document.getElementById('micBtn').innerText = "➔"; 
+            OnInput.call(inputField); 
+            inputField.focus();
+        }
+
+        function emergencyExit() {
+            window.close(); 
+            setTimeout(() => {
+                window.location.replace("about:blank"); 
+            }, 50);
+        }
+
+        function executeHideAction(shouldHide) {
+            chatHiddenStatus = shouldHide;
+            const messagesArea = document.getElementById('chatMessagesArea');
+            if (chatHiddenStatus) {
+                messagesArea.style.opacity = "0"; 
+                messagesArea.style.pointerEvents = "none";
+            } else {
+                messagesArea.style.opacity = "1"; 
+                messagesArea.style.pointerEvents = "auto";
+            }
+        }
+
+        function goBack() { window.location.href = "inbox.html"; }
+
+        function toggleVanishMode() {
+            isVanishModeOn = !isVanishModeOn;
+            const btn = document.getElementById('vanishToggleBtn');
+            if (isVanishModeOn) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
 
         function loadRealtimeMessages() {
-            const chatRoomId = myGupchupID < partnerGupchupID ? myGupchupID + "_" + partnerGupchupID : partnerGupchupID + "_" + myGupchupID;
+            const chatRoomId = getChatRoomId(myGupchupID, partnerGupchupID);
+            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+
             database.ref('chats/' + chatRoomId).on('value', function(snapshot) {
                 const container = document.getElementById('chatMessagesArea');
                 container.innerHTML = "";
                 snapshot.forEach(function(childSnapshot) {
-                    const data = childSnapshot.val();
-                    const row = document.createElement('div');
-                    row.className = "message-row " + (data.sender === myGupchupID ? "sent" : "received");
-                    
-                    if (data.type === "image") {
-                        row.innerHTML = `<div class="message-bubble"><img src="${data.text}" class="chat-image"></div>`;
-                    } else {
-                        row.innerHTML = `<div class="message-bubble">${data.text}</div>`;
+                    const msgData = childSnapshot.val();
+                    const msgId = childSnapshot.key;
+                    if (msgData.timestamp < sevenDaysAgo) {
+                        database.ref('chats/' + chatRoomId + '/' + msgId).remove();
+                        return;
                     }
-                    container.appendChild(row);
+                    displayMessageBubble(msgId, msgData);
+                    if (msgData.vanish === true && msgData.sender !== myGupchupID) {
+                        setTimeout(() => { database.ref('chats/' + chatRoomId + '/' + msgId).remove(); }, 10000);
+                    }
                 });
-                scrollToBottom();
+                
+                // ⚡ संदेश लोड होने पर स्क्रॉल फिक्स
+                if (!chatHiddenStatus) { 
+                    snapToBottom();
+                    setTimeout(snapToBottom, 300); 
+                }
             });
         }
 
-        function sendTextMessage() {
-            const input = document.getElementById('messageInputField');
-            if (input.value.trim() === "") return;
-            const chatRoomId = myGupchupID < partnerGupchupID ? myGupchupID + "_" + partnerGupchupID : partnerGupchupID + "_" + myGupchupID;
-            database.ref('chats/' + chatRoomId).push().set({ sender: myGupchupID, text: input.value, timestamp: Date.now(), type: "text" });
-            input.value = "";
-            scrollToBottom();
+        function displayMessageBubble(msgId, data) {
+            const container = document.getElementById('chatMessagesArea');
+            const row = document.createElement('div');
+            row.className = "message-row " + (data.sender === myGupchupID ? "sent" : "received");
+            let innerHTML = `<div class="message-bubble" id="msg_${msgId}" oncontextmenu="openDeleteMenu(event, '${msgId}')" onclick="triggerSwipeReply('${msgId}', '${data.text}')">`;
+            if (data.replyTo) { innerHTML += `<div class="reply-source-inside">↩️ ${data.replyTo}</div>`; }
+            if (data.type === "image") { innerHTML += `<img src="${data.text}" class="chat-image" oncontextmenu="return false;">`; }
+            else { innerHTML += `<div>${data.text}</div>`; }
+            innerHTML += `<span class="message-time">✓</span></div>`;
+            row.innerHTML = innerHTML;
+            container.appendChild(row);
         }
 
-        // ⚡ नया: फायरबेस स्टोरेज से फोटो भेजने वाला फास्ट फंक्शन
+        function getChatRoomId(id1, id2) { return id1 < id2 ? id1 + "_" + id2 : id2 + "_" + id1; }
+        function checkEnterKey(e) { }
+
+        function sendTextMessage() {
+            const input = document.getElementById('messageInputField');
+            const text = input.value.trim();
+            if (text === "") return;
+            const chatRoomId = getChatRoomId(myGupchupID, partnerGupchupID);
+            const msgRef = database.ref('chats/' + chatRoomId).push();
+            const messageData = { sender: myGupchupID, text: text, timestamp: Date.now(), type: "text", vanish: isVanishModeOn };
+            if (activeReplyId) { messageData.replyTo = activeReplyText; }
+            msgRef.set(messageData);
+            input.value = "";
+            input.style.height = '40px'; 
+            document.getElementById('micBtn').innerText = "🎤";
+            cancelReply();
+            
+            // ⚡ मैसेज भेजने पर स्क्रॉल फिक्स
+            snapToBottom();
+            setTimeout(snapToBottom, 100);
+        }
+
+        function triggerGallery() { document.getElementById('galleryInput').click(); }
+        
+        // ⚡ नया: स्टोरेज का इस्तेमाल करके फोटो भेजने का फास्ट तरीका
         function sendImageMessage(input) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 const storageRef = storage.ref('images/' + Date.now() + '_' + file.name);
+                
                 storageRef.put(file).then(snapshot => {
                     snapshot.ref.getDownloadURL().then(url => {
-                        const chatRoomId = myGupchupID < partnerGupchupID ? myGupchupID + "_" + partnerGupchupID : partnerGupchupID + "_" + myGupchupID;
-                        database.ref('chats/' + chatRoomId).push().set({ sender: myGupchupID, text: url, timestamp: Date.now(), type: "image" });
+                        const chatRoomId = getChatRoomId(myGupchupID, partnerGupchupID);
+                        database.ref('chats/' + chatRoomId).push().set({ 
+                            sender: myGupchupID, 
+                            text: url, 
+                            timestamp: Date.now(), 
+                            type: "image", 
+                            vanish: isVanishModeOn 
+                        });
+                        snapToBottom();
+                        setTimeout(snapToBottom, 300);
                     });
                 });
             }
         }
 
-        function emergencyExit() { window.close(); }
-        window.onload = loadRealtimeMessages;
+        function openDeleteMenu(e, msgId) { e.preventDefault(); selectedMessageId = msgId; document.getElementById('deleteModal').style.display = 'flex'; }
+        function closeDeleteModal() { document.getElementById('deleteModal').style.display = 'none'; }
+        function confirmDeleteMessage() { if (selectedMessageId) { database.ref('chats/' + getChatRoomId(myGupchupID, partnerGupchupID) + '/' + selectedMessageId).remove(); closeDeleteModal(); } }
+        function triggerSwipeReply(msgId, text) { activeReplyId = msgId; activeReplyText = text.length > 30 ? text.substring(0, 30) + "..." : text; document.getElementById('replyPreviewText').innerText = "रिप्लाई दें: " + activeReplyText; document.getElementById('replyPreviewBar').style.display = 'flex'; }
+        function cancelReply() { activeReplyId = null; activeReplyText = ""; document.getElementById('replyPreviewBar').style.display = 'none'; }
+
+        function setupVoiceToText() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = false; recognition.lang = 'hi-IN';
+                recognition.onresult = function(event) {
+                    const inputField = document.getElementById('messageInputField');
+                    inputField.value += event.results[0][0].transcript;
+                    document.getElementById('micBtn').innerText = "➔";
+                    OnInput.call(inputField); 
+                    toggleMicStyle(false);
+                };
+                recognition.onerror = function() { toggleMicStyle(false); };
+                recognition.onend = function() { toggleMicStyle(false); };
+            }
+        }
+        function toggleVoiceTyping() { if (!recognition) { alert("आपके ब्राउज़र में वॉइस टाइपिंग उपलब्ध नहीं है।"); return; } toggleMicStyle(true); recognition.start(); }
+        function toggleMicStyle(isRecording) {
+            const micBtn = document.getElementById('micBtn');
+            if (isRecording) { micBtn.classList.add('recording'); micBtn.innerText = "🛑"; }
+            else { micBtn.classList.remove('recording'); micBtn.innerText = "🎤"; }
+        }
     </script>
 </body>
 </html>
