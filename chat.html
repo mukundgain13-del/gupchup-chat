@@ -90,9 +90,9 @@
             gap: 10px; 
             z-index: 5;
             margin-bottom: 75px; 
-            scroll-behavior: auto; /* तुरंत स्क्रॉल के लिए auto किया */
         }
 
+        /* 1. रीयल-टाइम मैसेज बबल्स */
         .message-row { display: flex; width: 100%; }
         .message-row.sent { justify-content: flex-end; }
         .message-row.received { justify-content: flex-start; }
@@ -104,17 +104,7 @@
         .received .message-bubble { background: #202c33; color: #e9edef; border-top-left-radius: 0; }
         .reply-source-inside { background: rgba(0,0,0,0.2); padding: 4px 8px; border-left: 3px solid #00a884; border-radius: 4px; margin-bottom: 4px; font-size: 12px; color: #8696a0; }
         .message-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 4px; display: block; }
-        
-        /* 🚫 प्राइवेसी इमेज: लॉन्ग प्रेस और डाउनलोड पूरी तरह डिसेबल */
-        .chat-image { 
-            max-width: 100%; 
-            border-radius: 6px; 
-            margin-top: 5px; 
-            pointer-events: none; 
-            -webkit-touch-callout: none;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+        .chat-image { max-width: 100%; border-radius: 6px; margin-top: 5px; pointer-events: none; -webkit-touch-callout: none; }
 
         .reply-preview-bar { background: #1f2c34; padding: 8px 15px; display: none; justify-content: space-between; align-items: center; border-left: 4px solid #00a884; z-index: 1005; position: fixed; bottom: 70px; left: 4%; width: 92%; border-radius: 8px; }
         .reply-preview-text { font-size: 13px; color: #8696a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
@@ -268,7 +258,6 @@
                     micBtn.style.background = "#00a884";
                 } else {
                     micBtn.innerText = "🎤"; 
-                    micBtn.style.background = "#00a884";
                 }
             });
         }
@@ -316,7 +305,7 @@
             } else {
                 messagesArea.style.opacity = "1"; 
                 messagesArea.style.pointerEvents = "auto";
-                scrollToBottom();
+                setTimeout(scrollToBottom, 100);
             }
         }
 
@@ -332,10 +321,12 @@
             }
         }
 
-        // ⚡ स्क्रॉल को तुरंत नीचे धकेलने का नया फास्ट फंक्शन
+        // ⚡ अचूक स्क्रॉलिंग फंक्शन (लास्ट रो पर सीधे फोकस)
         function scrollToBottom() {
             const container = document.getElementById('chatMessagesArea');
-            container.scrollTop = container.scrollHeight;
+            if (container.lastElementChild) {
+                container.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
         }
 
         function loadRealtimeMessages() {
@@ -358,9 +349,9 @@
                     }
                 });
                 
-                // ⚡ संदेश लोड होते ही बिना किसी सुस्ती के नीचे स्क्रॉल होगा
+                // ⚡ संदेश लोड होने के ठीक बाद स्मूथ स्क्रॉल
                 if (!chatHiddenStatus) { 
-                    setTimeout(scrollToBottom, 50); 
+                    setTimeout(scrollToBottom, 100); 
                 }
             });
         }
@@ -369,30 +360,17 @@
             const container = document.getElementById('chatMessagesArea');
             const row = document.createElement('div');
             row.className = "message-row " + (data.sender === myGupchupID ? "sent" : "received");
-            
-            // 🚫 ऑन-कॉन्टेक्स्टमेन्यू (राइट क्लिक या लॉन्ग प्रेस) पर डाउनलोड रोकने का कड़ा बंदोबस्त
             let innerHTML = `<div class="message-bubble" id="msg_${msgId}" oncontextmenu="openDeleteMenu(event, '${msgId}')" onclick="triggerSwipeReply('${msgId}', '${data.text}')">`;
             if (data.replyTo) { innerHTML += `<div class="reply-source-inside">↩️ ${data.replyTo}</div>`; }
-            
-            if (data.type === "image") { 
-                innerHTML += `<img src="${data.text}" class="chat-image" oncontextmenu="event.preventDefault(); return false;" contextmenu="return false;" style="-webkit-touch-callout: none;">`; 
-            } else { 
-                innerHTML += `<div>${data.text}</div>`; 
-            }
+            if (data.type === "image") { innerHTML += `<img src="${data.text}" class="chat-image" oncontextmenu="return false;">`; }
+            else { innerHTML += `<div>${data.text}</div>`; }
             innerHTML += `<span class="message-time">✓</span></div>`;
             row.innerHTML = innerHTML;
             container.appendChild(row);
         }
 
         function getChatRoomId(id1, id2) { return id1 < id2 ? id1 + "_" + id2 : id2 + "_" + id1; }
-        
-        // ⌨️ कीबोर्ड पर Enter दबाने से तुरंत सेंड होने का ऑप्शन सेट किया
-        function checkEnterKey(e) { 
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendTextMessage();
-            }
-        }
+        function checkEnterKey(e) { }
 
         function sendTextMessage() {
             const input = document.getElementById('messageInputField');
@@ -407,24 +385,17 @@
             input.style.height = '40px'; 
             document.getElementById('micBtn').innerText = "🎤";
             cancelReply();
-            setTimeout(scrollToBottom, 30); // मैसेज भेजते ही तुरंत नीचे जंप
+            setTimeout(scrollToBottom, 100);
         }
 
         function triggerGallery() { document.getElementById('galleryInput').click(); }
-        
         function sendImageMessage(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const chatRoomId = getChatRoomId(myGupchupID, partnerGupchupID);
-                    database.ref('chats/' + chatRoomId).push().set({ 
-                        sender: myGupchupID, 
-                        text: e.target.result, 
-                        timestamp: Date.now(), 
-                        type: "image", 
-                        vanish: isVanishModeOn 
-                    });
-                    setTimeout(scrollToBottom, 100); // फोटो अपलोड होते ही तुरंत नीचे जंप
+                    database.ref('chats/' + chatRoomId).push().set({ sender: myGupchupID, text: e.target.result, timestamp: Date.now(), type: "image", vanish: isVanishModeOn });
+                    setTimeout(scrollToBottom, 200);
                 };
                 reader.readAsDataURL(input.files[0]);
             }
