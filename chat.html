@@ -20,7 +20,7 @@
             position: relative;
         }
 
-        /* 👑 हमेशा सबसे ऊपर तैरने वाला प्राइवेसी वॉटरमार्क (लंबे चैट टेक्स्ट के ऊपर दिखेगा) */
+        /* 👑 हमेशा सबसे ऊपर तैरने वाला प्राइवेसी वॉटरमार्क */
         .floating-watermark {
             position: fixed;
             top: 50%;
@@ -30,7 +30,7 @@
             color: rgba(255, 255, 255, 0.04); 
             font-weight: bold;
             pointer-events: none;
-            z-index: 99999; /* सबसे उच्चतम लेयर ताकि संदेश इसके नीचे से गुजरें और यह ऊपर तैरता रहे */
+            z-index: 99999; 
             white-space: nowrap;
             text-align: center;
             width: 100%;
@@ -54,13 +54,11 @@
         }
         .header-left { display: flex; align-items: center; padding-left: 5px; }
         
-        /* 8. रीड रिसीट्स / 11. घोस्ट मोड (ऑनलाइन स्टेटस) */
         .online-status { font-size: 16px; color: #00a884; display: flex; align-items: center; gap: 6px; font-weight: bold; }
         .online-dot { width: 10px; height: 10px; background: #00a884; border-radius: 50%; display: inline-block; }
         
         .header-actions { display: flex; align-items: center; gap: 20px; }
         
-        /* 👑 सुधरा हुआ एक्शन बटन (बिना ताले और लेबल के) */
         .btn-direct-action { 
             background: #2a3942; 
             border: none; 
@@ -77,14 +75,12 @@
         }
         .btn-direct-action:hover { transform: scale(1.1); }
 
-        /* 7. मैजिक वैनिश मोड टॉगल */
         .btn-vanish-toggle { background: none; border: none; font-size: 22px; cursor: pointer; filter: grayscale(1); transition: filter 0.2s; }
         .btn-vanish-toggle.active { filter: grayscale(0); transform: scale(1.1); }
         
-        /* 10. क्विक एग्जिट (Emergency Exit) बटन */
         .btn-exit { background: #ea0038; color: white; border: none; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
-        /* मुख्य चैट एरिया - नीचे मार्जिन देकर स्क्रीन के अंदर घुसने से बचाया */
+        /* मुख्य चैट एरिया */
         .chat-messages-area { 
             flex: 1; 
             padding: 15px; 
@@ -93,10 +89,10 @@
             flex-direction: column; 
             gap: 10px; 
             z-index: 5;
-            margin-bottom: 75px; /* इसके कारण डैशबोर्डและ चैट पट्टी एकदम सही एड्रेस में बीच में रहेंगे */
+            margin-bottom: 75px; 
+            scroll-behavior: auto; /* तुरंत स्क्रॉल के लिए auto किया */
         }
 
-        /* 1. रीयल-टाइम मैसेज बबल्स */
         .message-row { display: flex; width: 100%; }
         .message-row.sent { justify-content: flex-end; }
         .message-row.received { justify-content: flex-start; }
@@ -108,14 +104,22 @@
         .received .message-bubble { background: #202c33; color: #e9edef; border-top-left-radius: 0; }
         .reply-source-inside { background: rgba(0,0,0,0.2); padding: 4px 8px; border-left: 3px solid #00a884; border-radius: 4px; margin-bottom: 4px; font-size: 12px; color: #8696a0; }
         .message-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 4px; display: block; }
-        .chat-image { max-width: 100%; border-radius: 6px; margin-top: 5px; pointer-events: none; -webkit-touch-callout: none; }
+        
+        /* 🚫 प्राइवेसी इमेज: लॉन्ग प्रेस और डाउनलोड पूरी तरह डिसेबल */
+        .chat-image { 
+            max-width: 100%; 
+            border-radius: 6px; 
+            margin-top: 5px; 
+            pointer-events: none; 
+            -webkit-touch-callout: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
 
-        /* 3. लाइव रिप्लाई बार */
         .reply-preview-bar { background: #1f2c34; padding: 8px 15px; display: none; justify-content: space-between; align-items: center; border-left: 4px solid #00a884; z-index: 1005; position: fixed; bottom: 70px; left: 4%; width: 92%; border-radius: 8px; }
         .reply-preview-text { font-size: 13px; color: #8696a0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
         .reply-close { color: #ea0038; cursor: pointer; font-weight: bold; }
 
-        /* 📱 सुधरा हुआ इनपुट एरिया - छोटा करके पास में लाया गया (Capsule Style) */
         .chat-input-area { 
             background: #202c33; 
             padding: 6px 10px; 
@@ -124,11 +128,11 @@
             gap: 8px; 
             z-index: 1010;
             position: fixed;
-            bottom: 8px; /* स्क्रीन के नीचे से थोड़ा ऊपर ताकि कीबोर्ड से न दबे */
-            left: 3%; /* दोनों तरफ से छोटा करके बीच में समेटा */
+            bottom: 8px; 
+            left: 3%; 
             width: 94%; 
             height: 54px;
-            border-radius: 30px; /* कैप्सूल लुक */
+            border-radius: 30px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
         
@@ -146,7 +150,6 @@
         
         .btn-sticker { background: none; border: none; color: #8696a0; font-size: 20px; cursor: pointer; }
         
-        /* ✍️ मुख्य संदेश इनपुट - तीर (Arrow) बटन लाने के लिए इसे textarea में बदला और रीसाइज़ बंद किया */
         .chat-input { 
             flex: 1; 
             background: none; 
@@ -165,7 +168,6 @@
         .btn-mic { width: 38px; height: 38px; background: #00a884; border: none; border-radius: 50%; color: #111b21; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
         .btn-mic.recording { background: #ea0038; color: white; animation: pulse 1s infinite; }
 
-        /* 2. होल्ड टू डिलीट पॉप-अप */
         .delete-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11,20,26,0.8); display: none; justify-content: center; align-items: center; z-index: 30000; }
         .delete-box { background: #222e35; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center; }
         .delete-btn { width: 100%; background: #ea0038; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 15px; }
@@ -266,6 +268,7 @@
                     micBtn.style.background = "#00a884";
                 } else {
                     micBtn.innerText = "🎤"; 
+                    micBtn.style.background = "#00a884";
                 }
             });
         }
@@ -276,7 +279,6 @@
             if(this.value === "") this.style.height = '40px';
         }
 
-        // 🚀 नया बटन फंक्शन: बिना ताले/पिन के डायरेक्ट एक्शन करने के लिए
         function handleDirectActionClick() {
             executeHideAction(!chatHiddenStatus);
         }
@@ -314,6 +316,7 @@
             } else {
                 messagesArea.style.opacity = "1"; 
                 messagesArea.style.pointerEvents = "auto";
+                scrollToBottom();
             }
         }
 
@@ -327,6 +330,12 @@
             } else {
                 btn.classList.remove('active');
             }
+        }
+
+        // ⚡ स्क्रॉल को तुरंत नीचे धकेलने का नया फास्ट फंक्शन
+        function scrollToBottom() {
+            const container = document.getElementById('chatMessagesArea');
+            container.scrollTop = container.scrollHeight;
         }
 
         function loadRealtimeMessages() {
@@ -348,7 +357,11 @@
                         setTimeout(() => { database.ref('chats/' + chatRoomId + '/' + msgId).remove(); }, 10000);
                     }
                 });
-                if (!chatHiddenStatus) { container.scrollTop = container.scrollHeight; }
+                
+                // ⚡ संदेश लोड होते ही बिना किसी सुस्ती के नीचे स्क्रॉल होगा
+                if (!chatHiddenStatus) { 
+                    setTimeout(scrollToBottom, 50); 
+                }
             });
         }
 
@@ -356,17 +369,30 @@
             const container = document.getElementById('chatMessagesArea');
             const row = document.createElement('div');
             row.className = "message-row " + (data.sender === myGupchupID ? "sent" : "received");
+            
+            // 🚫 ऑन-कॉन्टेक्स्टमेन्यू (राइट क्लिक या लॉन्ग प्रेस) पर डाउनलोड रोकने का कड़ा बंदोबस्त
             let innerHTML = `<div class="message-bubble" id="msg_${msgId}" oncontextmenu="openDeleteMenu(event, '${msgId}')" onclick="triggerSwipeReply('${msgId}', '${data.text}')">`;
             if (data.replyTo) { innerHTML += `<div class="reply-source-inside">↩️ ${data.replyTo}</div>`; }
-            if (data.type === "image") { innerHTML += `<img src="${data.text}" class="chat-image" oncontextmenu="return false;">`; }
-            else { innerHTML += `<div>${data.text}</div>`; }
+            
+            if (data.type === "image") { 
+                innerHTML += `<img src="${data.text}" class="chat-image" oncontextmenu="event.preventDefault(); return false;" contextmenu="return false;" style="-webkit-touch-callout: none;">`; 
+            } else { 
+                innerHTML += `<div>${data.text}</div>`; 
+            }
             innerHTML += `<span class="message-time">✓</span></div>`;
             row.innerHTML = innerHTML;
             container.appendChild(row);
         }
 
         function getChatRoomId(id1, id2) { return id1 < id2 ? id1 + "_" + id2 : id2 + "_" + id1; }
-        function checkEnterKey(e) { }
+        
+        // ⌨️ कीबोर्ड पर Enter दबाने से तुरंत सेंड होने का ऑप्शन सेट किया
+        function checkEnterKey(e) { 
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendTextMessage();
+            }
+        }
 
         function sendTextMessage() {
             const input = document.getElementById('messageInputField');
@@ -381,15 +407,24 @@
             input.style.height = '40px'; 
             document.getElementById('micBtn').innerText = "🎤";
             cancelReply();
+            setTimeout(scrollToBottom, 30); // मैसेज भेजते ही तुरंत नीचे जंप
         }
 
         function triggerGallery() { document.getElementById('galleryInput').click(); }
+        
         function sendImageMessage(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const chatRoomId = getChatRoomId(myGupchupID, partnerGupchupID);
-                    database.ref('chats/' + chatRoomId).push().set({ sender: myGupchupID, text: e.target.result, timestamp: Date.now(), type: "image", vanish: isVanishModeOn });
+                    database.ref('chats/' + chatRoomId).push().set({ 
+                        sender: myGupchupID, 
+                        text: e.target.result, 
+                        timestamp: Date.now(), 
+                        type: "image", 
+                        vanish: isVanishModeOn 
+                    });
+                    setTimeout(scrollToBottom, 100); // फोटो अपलोड होते ही तुरंत नीचे जंप
                 };
                 reader.readAsDataURL(input.files[0]);
             }
